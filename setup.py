@@ -1,4 +1,4 @@
-from setuptools import setup
+import setuptools
 
 
 def readme():
@@ -6,7 +6,7 @@ def readme():
         return f.read()
 
 
-setup(
+setuptools.setup(
     name='vtna',
     version='0.0',
     description='Visualizing temporal networks with attributes',
