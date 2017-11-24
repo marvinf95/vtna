@@ -22,7 +22,8 @@ setuptools.setup(
     packages=['vtna'],
     zip_safe=False,
     install_requires=[
-        # Add dependencies here.
+        'numpy',
+        'pandas'
     ],
     test_suite='nose.collector',
     tests_require=['nose'],
