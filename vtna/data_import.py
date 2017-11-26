@@ -1,4 +1,4 @@
-__all__ = ['TemporalEdgeTable']
+__all__ = ['TemporalEdgeTable', 'MetadataTable', 'BadOrderError']
 
 
 import typing as typ
