@@ -37,17 +37,6 @@ class TemporalEdgeTable(object):
         self.__min_timestamp = self.__table['timestamp'].min()
         self.__max_timestamp = self.__table['timestamp'].max()
 
-    def get_edges_at(self, timestamp: int) -> typ.List[typ.Tuple[int, int]]:
-        if type(timestamp) != int:
-            raise TypeError(f'type {int} expected, received type {type(timestamp)}')
-        if not(self.__min_timestamp <= timestamp <= self.__max_timestamp):
-            raise IndexError(f'timestamp {timestamp} out of range ({self.__min_timestamp}, {self.__max_timestamp})')
-        if timestamp % self.__update_delta != 0:
-            msg = f'queried timestamp {timestamp} is not a multiple of delta {self.__update_delta}'
-            warnings.warn(msg)
-        timestamp_df = self.__table[self.__table.timestamp == timestamp][['node1', 'node2']]
-        return [(node1, node2) for node1, node2 in timestamp_df.itertuples(index=False)]
-
     def get_update_delta(self) -> int:
         return self.__update_delta
 
@@ -57,8 +46,16 @@ class TemporalEdgeTable(object):
     def get_latest_timestamp(self) -> int:
         return self.__max_timestamp
 
-    def __getitem__(self, item) -> typ.List[typ.Tuple[int, int]]:
-        return self.get_edges_at(item)
+    def __getitem__(self, timestamp) -> typ.List[typ.Tuple[int, int]]:
+        if type(timestamp) != int:
+            raise TypeError(f'type {int} expected, received type {type(timestamp)}')
+        if not(self.__min_timestamp <= timestamp <= self.__max_timestamp):
+            raise IndexError(f'timestamp {timestamp} out of range ({self.__min_timestamp}, {self.__max_timestamp})')
+        if timestamp % self.__update_delta != 0:
+            msg = f'queried timestamp {timestamp} is not a multiple of delta {self.__update_delta}'
+            warnings.warn(msg)
+        timestamp_df = self.__table[self.__table.timestamp == timestamp][['node1', 'node2']]
+        return [(node1, node2) for node1, node2 in timestamp_df.itertuples(index=False)]
 
 
 class MetadataTable(object):
