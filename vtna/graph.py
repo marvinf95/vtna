@@ -1,6 +1,7 @@
 __all__ = ['TemporalGraph', 'Graph', 'TemporalNode', 'Edge']
 
 import typing as typ
+import networkx as nx
 
 import vtna.data_import as dimp
 
@@ -22,19 +23,23 @@ class TemporalGraph(object):
         """
         # Create a dictionary with the start and the end of timestamps: key = number of timestep, value = end of timestep
         self.__timesteps = {}
-        end_interval = __min_timestamp + granularity
+        end_interval = get_earliest_timestamp() + granularity
         interval_number = 0
-        while end_interval < __max_timestamp:
+        while end_interval < get_latest_timestamp():
             self.__timesteps.update({interval_number: end_interval})
             end_interval = end_interval + granularity
             interval_number += 1
         # Add Graph at the last timestamp. The interval could be shorter than the other intervals
-        self.__timesteps.update({interval_number: __max_timestamp})
+        self.__timesteps.update({interval_number: get_latest_timestamp()})
             self.__timesteps += 1
-
-
-        #self.__edges_at_timestamp = get_edges_at(timestamp)
-        #self.__graph_at_timestamp = nx.Graph().add_edges_from(timestamp)
+        # Create graph for every timestep
+        for key, value in self.__timesteps.items():
+            i = 0
+            while i < granularity:
+                __temp_graph = nx.Graph()
+                __temp_graph.add_edges_from(edge_table(value))
+                i = i + 20
+            # Save graph to a structure, where all graphs can be saved. For example dictionary with key timestep and value the graph
 
     def __getitem__(self, time_step: int) -> Graph:
         pass
