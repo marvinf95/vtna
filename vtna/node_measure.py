@@ -1,10 +1,13 @@
+__all__ = []  # Only the actual implementations
+
 import abc
 import typing as typ
 
 import vtna.graph
+import vtna.utility as util
 
 
-class NodeMeasure(abc.ABC):
+class NodeMeasure(abc.ABC, util.Describable):
     @abc.abstractmethod
     def __init__(self, graph: vtna.graph.TemporalGraph):
         pass

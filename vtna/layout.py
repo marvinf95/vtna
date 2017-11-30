@@ -1,9 +1,10 @@
-__all__ = []  # export actual implementations of classes
+__all__ = []  # Only the actual implementations
 
 import abc
 import typing as typ
 
 import vtna.graph
+import vtna.utility as util
 
 
 Point = typ.Tuple[float, float]
@@ -11,7 +12,7 @@ PointOrPoints = typ.Union[Point, typ.List[Point]]
 TimeStepArg = typ.Union[int, slice]
 
 
-class Layout(abc.ABC):
+class Layout(abc.ABC, util.Describable):
     def __init__(self, temp_graph: vtna.graph.TemporalGraph):
         self.__temp_graph = temp_graph
 
