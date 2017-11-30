@@ -35,8 +35,8 @@ class TemporalGraph(object):
         # Create graph for every timestep
         self.__temporal_graphs = {}
         # TODO: Add a structure for nodes_with_attributes from meta_table that could be imported directly in a graph
-        nodes_with_attributes = {}
-        graph_nodes = nx.Graph().add_nodes_from(nodes_with_attributes)
+        self.__nodes_with_attributes = {}
+        graph_nodes = nx.Graph().add_nodes_from(self.__nodes_with_attributes)
         self.__temp_graph = nx.Graph().add_edges_from(edge_table)
         for key, value in self.__timesteps.items():
             __temp_graph = graph_nodes.copy()
@@ -51,15 +51,18 @@ class TemporalGraph(object):
         return self.__temporal_graphs.get[time_step]
 
     def __iter__(self) -> Iterable[Graph]:
+        # TODO: Option to iterate over __temporal_graphs and give back the specified graph
         pass
 
     def __len__(self):
         return len(self.__temporal_graphs)
 
     def get_nodes(self) -> typ.List[TemporalNode]:
+        # Get nodes out of nodes_with_attributes
         pass
 
     def get_node(self, node_id: int) -> TemporalNode:
+        # TODO: get nodes out of nodes_with_attributes
         pass
 
 
