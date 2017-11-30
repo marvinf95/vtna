@@ -10,9 +10,36 @@ AttributeValue = typ.Union[str, float]
 
 class TemporalGraph(object):
     def __init__(self, edge_table: dimp.TemporalEdgeTable, meta_table: dimp.MetadataTable, granularity: int):
-        pass
+        """
+        Creates graphs for all timestamps with a given granularity.
+
+        Args:
+            edge_table: Its a table with three columns.
+                        The first one specifies a timestamp.
+                        And the second and third one specifies the nodes that are interacting at this timestamp.
+            meta_table: Its a table with attributes for nodes.
+            granularity: Granularity defines the timesteps, for which the different graphs will be created.
+        """
+        # Create a dictionary with the start and the end of timestamps: key = number of timestep, value = end of timestep
+        self.__timesteps = {}
+        end_interval = __min_timestamp + granularity
+        interval_number = 0
+        while end_interval < __max_timestamp:
+            self.__timesteps.update({interval_number: end_interval})
+            end_interval = end_interval + granularity
+            interval_number += 1
+        # Add Graph at the last timestamp. The interval could be shorter than the other intervals
+        self.__timesteps.update({interval_number: __max_timestamp})
+            self.__timesteps += 1
+
+
+        #self.__edges_at_timestamp = get_edges_at(timestamp)
+        #self.__graph_at_timestamp = nx.Graph().add_edges_from(timestamp)
 
     def __getitem__(self, time_step: int) -> Graph:
+        pass
+
+    def __iter__(self) -> Iterable[Graph]:
         pass
 
     def __len__(self):
@@ -27,10 +54,10 @@ class TemporalGraph(object):
 
 class Graph(object):
     def __init__(self, edges: typ.List[Edge]):
-        pass
+        self.__edges = edges
 
     def get_edges(self) -> typ.List[Edge]:
-        pass
+        return self.__edges
 
     def get_edge(self, node1: int, node2: int) -> Edge:
         pass
