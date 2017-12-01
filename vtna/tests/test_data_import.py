@@ -60,7 +60,6 @@ class TestTemporalEdgeTableGetItem(unittest.TestCase):
     def test_none_max_slice(self):
         earliest = TestTemporalEdgeTableGetItem.edges.get_earliest_timestamp()
         latest = TestTemporalEdgeTableGetItem.edges.get_latest_timestamp()
-        print(type(latest))
         edges = list(TestTemporalEdgeTableGetItem.edges[:latest])
         unique_timestamps = set(timestamp for timestamp, *_ in edges)
 
@@ -68,3 +67,18 @@ class TestTemporalEdgeTableGetItem(unittest.TestCase):
         self.assertEqual(len(edges), 497, 'correct number of edges returned')
         self.assertTrue(latest not in unique_timestamps, 'does not contains latest timestamp')
 
+    def test_bad_type_int(self):
+        with self.assertRaises(TypeError):
+            _ = TestTemporalEdgeTableGetItem.edges[3.14]
+        with self.assertRaises(TypeError):
+            _ = TestTemporalEdgeTableGetItem.edges['foo']
+        with self.assertRaises(TypeError):
+            _ = TestTemporalEdgeTableGetItem.edges[int]
+
+    def test_bad_type_slice(self):
+        with self.assertRaises(TypeError):
+            _ = TestTemporalEdgeTableGetItem.edges[3.14:]
+        with self.assertRaises(TypeError):
+            _ = TestTemporalEdgeTableGetItem.edges[:'foo']
+        with self.assertRaises(TypeError):
+            _ = TestTemporalEdgeTableGetItem.edges[True:int]

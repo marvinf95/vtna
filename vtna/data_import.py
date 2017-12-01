@@ -60,11 +60,11 @@ class TemporalEdgeTable(object):
              An Iterable of tuples (timestamp, node1, node2), which are the temporal edges at the specified timestamp
              or in the specified time interval.
         Raises:
-            IndexError: Is raised, if integer is not in the observation interval as specified by
+            IndexError: Is raised, if index int is not in the observation interval as specified by
                 get_earliest_timestamp() and get_latest_timestamp().
-            ValueError: Is raised, if key is not an int, and if start or stop (of slice) are not int or None.
+            TypeError: Is raised, if key is not an int, or if start or stop (of slice) are not int or None.
         """
-        if isinstance(key, int):
+        if isinstance(key, (int, np.integer)):
             if not self.___is_in_time_interval(key):
                 raise IndexError(f'index {key} out of range ({self.__min_timestamp},'f'{self.__max_timestamp})')
             df = self.__table[self.__table.timestamp == key][['timestamp', 'node1', 'node2']]
@@ -75,7 +75,8 @@ class TemporalEdgeTable(object):
             if key.step is not None:
                 warnings.warn(f'TemporalEdgeTable.__getitem__ ignores step attribute in slice', category=UserWarning)
             # Ensure both start and stop are either None or int
-            if (start is not None and isinstance(start, int)) or (stop is not None and isinstance(stop, int)):
+            if (start is not None and not isinstance(start, (int, np.integer))) or \
+                    (stop is not None and not isinstance(stop, (int, np.integer))):
                 raise TypeError('slice indices must be integers or None')
             # If start or stop are None set them to min or max respectively
             if start is None:
@@ -154,8 +155,8 @@ class MetadataTable(object):
             KeyError: If specified node does not exist in metadata table.
             TypeError: If parameter node is not of type int.
         """
-        if isinstance(node, int):
-            raise TypeError(f'type {int} expected, received type {type(node)}')
+        if isinstance(node, (int, np.integer)):
+            raise TypeError(f'type {int} or {np.integer} expected, received type {type(node)}')
         return self.__table.ix[node].to_dict()
 
     def keys(self) -> typ.List[int]:
