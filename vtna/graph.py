@@ -18,6 +18,9 @@ class TemporalGraph(object):
     def __len__(self):
         pass
 
+    def __iter__(self) -> typ.Iterable['Graph']:
+        pass
+
     def get_nodes(self) -> typ.List['TemporalNode']:
         pass
 
