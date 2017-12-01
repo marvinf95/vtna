@@ -48,10 +48,10 @@ class LocalDegreeCentrality(LocalNodeMeasure):
         for localGraph in self.temporal_graph:
             degree_centrality = dict()
             for edge in localGraph.get_edges():
-                for node in edge.get_incident_nodes():
-                    if node not in degree_centrality:
-                        degree_centrality[node] = 0
-                    degree_centrality[node] += edge.get_count()
+                for nid in edge.get_incident_nodes():
+                    if nid not in degree_centrality:
+                        degree_centrality[nid] = 0
+                    degree_centrality[nid] += edge.get_count()
             self.degree_centrality_list.append(degree_centrality)
 
     def get_name(self) -> str:
