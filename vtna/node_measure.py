@@ -7,7 +7,7 @@ import vtna.graph
 import vtna.utility as util
 
 
-class NodeMeasure(abc.ABC, util.Describable):
+class NodeMeasure(util.Describable, metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def __init__(self, graph: vtna.graph.TemporalGraph):
         pass
@@ -24,13 +24,13 @@ class NodeMeasure(abc.ABC, util.Describable):
 # and GlobalNodeMeasure
 
 
-class LocalNodeMeasure(NodeMeasure, abc.ABC):
+class LocalNodeMeasure(NodeMeasure, metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def __getitem__(self, node_id: int) -> typ.Dict[int, float]:
         pass
 
 
-class GlobalNodeMeasure(NodeMeasure, abc.ABC):
+class GlobalNodeMeasure(NodeMeasure, metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def __getitem__(self, node_id: int) -> float:
         pass
