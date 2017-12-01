@@ -1,7 +1,7 @@
 import abc
 
 
-class Describable(abc.ABC):
+class Describable(metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def get_name(self) -> str:
         pass

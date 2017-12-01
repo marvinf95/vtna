@@ -24,13 +24,13 @@ class NodeMeasure(util.Describable, metaclass=abc.ABCMeta):
 # and GlobalNodeMeasure
 
 
-class LocalNodeMeasure(NodeMeasure, abc.ABC):
+class LocalNodeMeasure(NodeMeasure, metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def __getitem__(self, node_id: int) -> typ.Dict[int, float]:
         pass
 
 
-class GlobalNodeMeasure(NodeMeasure, abc.ABC):
+class GlobalNodeMeasure(NodeMeasure, metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def __getitem__(self, node_id: int) -> float:
         pass

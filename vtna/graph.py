@@ -12,27 +12,27 @@ class TemporalGraph(object):
     def __init__(self, edge_table: dimp.TemporalEdgeTable, meta_table: dimp.MetadataTable, granularity: int):
         pass
 
-    def __getitem__(self, time_step: int) -> Graph:
+    def __getitem__(self, time_step: int) -> 'Graph':
         pass
 
     def __len__(self):
         pass
 
-    def get_nodes(self) -> typ.List[TemporalNode]:
+    def get_nodes(self) -> typ.List['TemporalNode']:
         pass
 
-    def get_node(self, node_id: int) -> TemporalNode:
+    def get_node(self, node_id: int) -> 'TemporalNode':
         pass
 
 
 class Graph(object):
-    def __init__(self, edges: typ.List[Edge]):
+    def __init__(self, edges: typ.List['Edge']):
         pass
 
-    def get_edges(self) -> typ.List[Edge]:
+    def get_edges(self) -> typ.List['Edge']:
         pass
 
-    def get_edge(self, node1: int, node2: int) -> Edge:
+    def get_edge(self, node1: int, node2: int) -> 'Edge':
         pass
 
 
