@@ -38,24 +38,85 @@ class TemporalEdgeTable(object):
         self.__max_timestamp = self.__table['timestamp'].max()
 
     def get_update_delta(self) -> int:
+        """Returns update delta, the minimal temporal distance between 2 observations."""
         return self.__update_delta
 
     def get_earliest_timestamp(self) -> int:
+        """Returns the earliest timestamp, therefore defines the lower bound of the observation time interval."""
         return self.__min_timestamp
 
     def get_latest_timestamp(self) -> int:
+        """Returns the latest timestamp, therefore defines the upper bound of the observation time interval."""
         return self.__max_timestamp
 
-    def __getitem__(self, timestamp) -> typ.List[typ.Tuple[int, int]]:
-        if type(timestamp) != int:
-            raise TypeError(f'type {int} expected, received type {type(timestamp)}')
-        if not(self.__min_timestamp <= timestamp <= self.__max_timestamp):
-            raise IndexError(f'timestamp {timestamp} out of range ({self.__min_timestamp}, {self.__max_timestamp})')
-        if timestamp % self.__update_delta != 0:
-            msg = f'queried timestamp {timestamp} is not a multiple of delta {self.__update_delta}'
-            warnings.warn(msg)
-        timestamp_df = self.__table[self.__table.timestamp == timestamp][['node1', 'node2']]
-        return [(node1, node2) for node1, node2 in timestamp_df.itertuples(index=False)]
+    def __getitem__(self, key: typ.Union[int, slice]) -> typ.Iterable[typ.Tuple[int, int, int]]:
+        """
+        Retrieves temporal edges based on single timestamp or time interval defined by slice.
+
+        Args:
+            key: Either an int or a slice. Slice can contain any combinations of int and None. Step is ignored in slice.
+        Returns:
+             An Iterable of tuples (timestamp, node1, node2), which are the temporal edges at the specified timestamp
+             or in the specified time interval.
+        Raises:
+            IndexError: Is raised, if any provided integer as key or start or stop (of slice) is not in the observation
+                interval as specified by get_earliest_timestamp() and get_latest_timestamp().
+            ValueError: Is raised, if key is not an int, and if start or stop (of slice) are not int or None.
+        Warns:
+            UserWarning: Occurs if key, start or stop (of slice) are not multiples of get_update_delta().
+                In that case the provided timestamps are rounded down (floored) to the closest multiple.
+        """
+        if type(key) == int:
+            if not self.___is_in_time_interval(key):
+                raise IndexError(f'index {key} out of range ({self.__min_timestamp},'f'{self.max_timestamp})')
+            # Timestamps will only return useful values if they are multiples of update_delta
+            if key % self.get_update_delta() != 0:
+                orig_key = key
+                key = self.__floor_timestamp(key)
+                msg = f'rounding index {orig_key} to {key}'
+                warnings.warn(msg, category=UserWarning)
+            df = self.__table[self.__table.timestamp == key][['timestamp', 'node1', 'node2']]
+        elif isinstance(key, slice):
+            start = key.start
+            stop = key.stop
+            # Step is not very useful to the given task and is therefore ignored
+            if key.step is not None:
+                warnings.warn(f'TemporalEdgeTable.__getitem__ ignores step attribute in slice', category=UserWarning)
+            # Ensure both start and stop are either None or int
+            if (start is not None and type(start) != int) or (stop is not None and type(stop) != int):
+                raise TypeError('slice indices must be integers or None')
+            # Ensure both start and stop are in the interval
+            if start is not None and self.___is_in_time_interval(start):
+                raise IndexError(f'start {start} out of range ({self.__min_timestamp},'f'{self.max_timestamp})')
+            if stop is not None and self.___is_in_time_interval(stop):
+                raise IndexError(f'stop {stop} out of range ({self.__min_timestamp},'f'{self.max_timestamp})')
+            if start is not None and start % self.__update_delta != 0:
+                orig_start = start
+                start = self.__floor_timestamp(start)
+                msg = f'rounding start {orig_start} to {start}'
+                warnings.warn(msg, category=UserWarning)
+            if stop is not None and stop % self.__update_delta != 0:
+                orig_stop = stop
+                stop = self.__floor_timestamp(stop)
+                msg = f'rounding stop {orig_stop} to {stop}'
+                warnings.warn(msg, category=UserWarning)
+            # If start or stop are None set them to min or max respectively
+            if start is None:
+                start = self.__min_timestamp
+            if stop is None:
+                # max + 1 because retrieval is exclusive on stop, this ensures inclusion of max
+                stop = self.__max_timestamp + 1
+            df = self.__table[(self.__table.timestamp >= start) & (self.__table.timestamp < stop)][
+                ['timestamp', 'node1', 'node2']]
+        else:
+            raise TypeError(f'indices must be integers or slices, not {type(key)}')
+        return ((timestamp, node1, node2) for timestamp, node1, node2 in df.itertuples(index=False))
+
+    def ___is_in_time_interval(self, timestamp: int) -> bool:
+        return self.__min_timestamp <= timestamp <= self.__max_timestamp
+
+    def __floor_timestamp(self, timestamp: int) -> object:
+        return timestamp - (timestamp % self.__update_delta)
 
 
 class MetadataTable(object):
