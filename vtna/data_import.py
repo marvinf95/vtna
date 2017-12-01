@@ -1,8 +1,9 @@
+import warnings
+
 __all__ = ['TemporalEdgeTable', 'MetadataTable', 'BadOrderError']
 
 
 import typing as typ
-import warnings
 
 import pandas
 import pandas.api.types
@@ -59,22 +60,13 @@ class TemporalEdgeTable(object):
              An Iterable of tuples (timestamp, node1, node2), which are the temporal edges at the specified timestamp
              or in the specified time interval.
         Raises:
-            IndexError: Is raised, if any provided integer as key or start or stop (of slice) is not in the observation
-                interval as specified by get_earliest_timestamp() and get_latest_timestamp().
+            IndexError: Is raised, if integer is not in the observation interval as specified by
+                get_earliest_timestamp() and get_latest_timestamp().
             ValueError: Is raised, if key is not an int, and if start or stop (of slice) are not int or None.
-        Warns:
-            UserWarning: Occurs if key, start or stop (of slice) are not multiples of get_update_delta().
-                In that case the provided timestamps are rounded down (floored) to the closest multiple.
         """
         if isinstance(key, int):
             if not self.___is_in_time_interval(key):
                 raise IndexError(f'index {key} out of range ({self.__min_timestamp},'f'{self.__max_timestamp})')
-            # Timestamps will only return useful values if they are multiples of update_delta
-            if key % self.get_update_delta() != 0:
-                orig_key = key
-                key = self.__floor_timestamp(key)
-                msg = f'rounding index {orig_key} to {key}'
-                warnings.warn(msg, category=UserWarning)
             df = self.__table[self.__table.timestamp == key][['timestamp', 'node1', 'node2']]
         elif isinstance(key, slice):
             start = key.start
@@ -85,21 +77,6 @@ class TemporalEdgeTable(object):
             # Ensure both start and stop are either None or int
             if (start is not None and isinstance(start, int)) or (stop is not None and isinstance(stop, int)):
                 raise TypeError('slice indices must be integers or None')
-            # Ensure both start and stop are in the interval
-            if start is not None and not self.___is_in_time_interval(start):
-                raise IndexError(f'start {start} out of range ({self.__min_timestamp},'f'{self.__max_timestamp})')
-            if stop is not None and not self.___is_in_time_interval(stop):
-                raise IndexError(f'stop {stop} out of range ({self.__min_timestamp},'f'{self.__max_timestamp})')
-            if start is not None and start % self.__update_delta != 0:
-                orig_start = start
-                start = self.__floor_timestamp(start)
-                msg = f'rounding start {orig_start} to {start}'
-                warnings.warn(msg, category=UserWarning)
-            if stop is not None and stop % self.__update_delta != 0:
-                orig_stop = stop
-                stop = self.__floor_timestamp(stop)
-                msg = f'rounding stop {orig_stop} to {stop}'
-                warnings.warn(msg, category=UserWarning)
             # If start or stop are None set them to min or max respectively
             if start is None:
                 start = self.__min_timestamp
@@ -114,9 +91,6 @@ class TemporalEdgeTable(object):
 
     def ___is_in_time_interval(self, timestamp: int) -> bool:
         return self.__min_timestamp <= timestamp <= self.__max_timestamp
-
-    def __floor_timestamp(self, timestamp: int) -> object:
-        return timestamp - (timestamp % self.__update_delta)
 
 
 class MetadataTable(object):
