@@ -1,4 +1,4 @@
-__all__ = []  # Only the actual implementations
+__all__ = ['LocalDegreeCentrality', 'GlobalDegreeCentrality']  # Only the actual implementations
 
 import abc
 import typing as typ
