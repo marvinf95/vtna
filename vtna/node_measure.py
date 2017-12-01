@@ -86,7 +86,7 @@ class GlobalDegreeCentrality(GlobalNodeMeasure):
         local_dc = LocalDegreeCentrality(graph)
         for node in graph.get_nodes():
             nid = node.get_id()
-            self.degree_centrality[nid] = sum([centrality_dict[nid] for centrality_dict in local_dc])
+            self.degree_centrality[nid] = sum(local_dc[nid])
 
     def get_name(self) -> str:
         return "Global Degree Centrality"
