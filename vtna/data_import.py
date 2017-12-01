@@ -66,9 +66,9 @@ class TemporalEdgeTable(object):
             UserWarning: Occurs if key, start or stop (of slice) are not multiples of get_update_delta().
                 In that case the provided timestamps are rounded down (floored) to the closest multiple.
         """
-        if type(key) == int:
+        if isinstance(key, int):
             if not self.___is_in_time_interval(key):
-                raise IndexError(f'index {key} out of range ({self.__min_timestamp},'f'{self.max_timestamp})')
+                raise IndexError(f'index {key} out of range ({self.__min_timestamp},'f'{self.__max_timestamp})')
             # Timestamps will only return useful values if they are multiples of update_delta
             if key % self.get_update_delta() != 0:
                 orig_key = key
@@ -83,13 +83,13 @@ class TemporalEdgeTable(object):
             if key.step is not None:
                 warnings.warn(f'TemporalEdgeTable.__getitem__ ignores step attribute in slice', category=UserWarning)
             # Ensure both start and stop are either None or int
-            if (start is not None and type(start) != int) or (stop is not None and type(stop) != int):
+            if (start is not None and isinstance(start, int)) or (stop is not None and isinstance(stop, int)):
                 raise TypeError('slice indices must be integers or None')
             # Ensure both start and stop are in the interval
-            if start is not None and self.___is_in_time_interval(start):
-                raise IndexError(f'start {start} out of range ({self.__min_timestamp},'f'{self.max_timestamp})')
-            if stop is not None and self.___is_in_time_interval(stop):
-                raise IndexError(f'stop {stop} out of range ({self.__min_timestamp},'f'{self.max_timestamp})')
+            if start is not None and not self.___is_in_time_interval(start):
+                raise IndexError(f'start {start} out of range ({self.__min_timestamp},'f'{self.__max_timestamp})')
+            if stop is not None and not self.___is_in_time_interval(stop):
+                raise IndexError(f'stop {stop} out of range ({self.__min_timestamp},'f'{self.__max_timestamp})')
             if start is not None and start % self.__update_delta != 0:
                 orig_start = start
                 start = self.__floor_timestamp(start)
@@ -180,7 +180,7 @@ class MetadataTable(object):
             KeyError: If specified node does not exist in metadata table.
             TypeError: If parameter node is not of type int.
         """
-        if type(node) != int:
+        if isinstance(node, int):
             raise TypeError(f'type {int} expected, received type {type(node)}')
         return self.__table.ix[node].to_dict()
 

@@ -41,16 +41,30 @@ class TestTemporalEdgeTableGetItem(unittest.TestCase):
 
     def test_earliest_timestamp_int(self):
         edges = list(TestTemporalEdgeTableGetItem.edges[1385982020])
+        unique_timestamps = list(set(timestamp for timestamp, *_ in edges))
 
         self.assertEqual(len(edges), 35, 'correct number of edges returned')
-        unique_timestamps = list(set(timestamp for timestamp, *_ in edges))
         self.assertEqual(len(unique_timestamps), 1, 'only 1 timestamps returned')
         self.assertEqual(unique_timestamps[0], 1385982020, 'correct timestamp returned')
 
     def test_none_none_slice(self):
+        earliest = TestTemporalEdgeTableGetItem.edges.get_earliest_timestamp()
+        latest = TestTemporalEdgeTableGetItem.edges.get_latest_timestamp()
         edges = list(TestTemporalEdgeTableGetItem.edges[:])
         unique_timestamps = set(timestamp for timestamp, *_ in edges)
-        self.assertEqual(min(unique_timestamps), 1385982020, 'contains earliest timestamp')
-        self.assertEqual(max(unique_timestamps), 1385982260, 'contains latest timestamp')
+
+        self.assertEqual(min(unique_timestamps), earliest, 'contains earliest timestamp')
+        self.assertEqual(max(unique_timestamps), latest, 'contains latest timestamp')
         self.assertEqual(len(edges), 500, 'correct number of edges returned')
+
+    def test_none_max_slice(self):
+        earliest = TestTemporalEdgeTableGetItem.edges.get_earliest_timestamp()
+        latest = TestTemporalEdgeTableGetItem.edges.get_latest_timestamp()
+        print(type(latest))
+        edges = list(TestTemporalEdgeTableGetItem.edges[:latest])
+        unique_timestamps = set(timestamp for timestamp, *_ in edges)
+
+        self.assertEqual(min(unique_timestamps), earliest, 'contains earliest timestamp')
+        self.assertEqual(len(edges), 497, 'correct number of edges returned')
+        self.assertTrue(latest not in unique_timestamps, 'does not contains latest timestamp')
 
