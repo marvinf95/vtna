@@ -24,7 +24,7 @@ class TemporalEdgeTable(object):
             FileNotFoundError: Error occurs if the file path or URL is invalid.
         """
         if col_sep is None:
-            col_sep = '\s+'
+            col_sep = r'\s+'
         self.__table = pandas.read_csv(graph_data_path,
                                        sep=col_sep,  # Split at any whitespace. Files are either space or tab separated.
                                        header=None,
@@ -61,7 +61,7 @@ class TemporalEdgeTable(object):
 class MetadataTable(object):
     def __init__(self, metadata_path: str, col_sep: str=None):
         if col_sep is None:
-            col_sep = '\s+'
+            col_sep = r'\s+'
 
         self.__table = pandas.read_csv(metadata_path,
                                        sep=col_sep,
