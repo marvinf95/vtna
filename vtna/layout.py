@@ -46,7 +46,24 @@ def flexible_spring_layout(temp_graph: vtna.graph.TemporalGraph) -> typ.List[typ
 @is_static(True)
 @name('Static Spring Layout')
 @description('Basic Spring layout which ensures static node position by aggregating all observations')
-def static_spring_layout(temp_graph: vtna.graph.TemporalGraph)  -> typ.List[typ.Dict[int, Point]]:
+def static_spring_layout(temp_graph: vtna.graph.TemporalGraph) -> typ.List[typ.Dict[int, Point]]:
     layout = nx.spring_layout(util.temporal_graph2networkx(temp_graph), dim=2, weight=None)
     return [layout.copy() for _ in range(len(temp_graph))]
 
+
+@is_static(False)
+@name('Flexible Weighted Spring Layout')
+@description('Weighted Spring layout with one individual layout per time step. Nodes with high number of interactions '
+             'are closer.')
+def flexible_weighted_spring_layout(temp_graph: vtna.graph.TemporalGraph) -> typ.List[typ.Dict[int, Point]]:
+    return [nx.spring_layout(util.graph2networkx(util.graph2networkx(graph)), dim=2, weight='count')
+            for graph in temp_graph]
+
+
+@is_static(True)
+@name('Static Weighted Spring Layout')
+@description('Weighted Spring layout which ensures static node position by aggregating all observations. Nodes with '
+             'high number of interactions are closer.')
+def static_weighted_spring_layout(temp_graph: vtna.graph.TemporalGraph) -> typ.List[typ.Dict[int, Point]]:
+    layout = nx.spring_layout(util.temporal_graph2networkx(temp_graph), dim=2, weight='count')
+    return [layout.copy() for _ in range(len(temp_graph))]
