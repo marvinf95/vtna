@@ -50,7 +50,7 @@ class TemporalGraph(object):
             # Check if python adds always the new __temp_graph or if it works with pointers and deletes everything
             self.__temporal_graphs.update({key: __temp_graph})
 
-    def __getitem__(self, time_step: int) -> Graph:
+    def __getitem__(self, time_step: int) -> 'Graph':
         return self.__temporal_graphs.get[time_step]
 
     def __iter__(self) -> Iterable[Graph]:
@@ -60,23 +60,23 @@ class TemporalGraph(object):
     def __len__(self):
         return len(self.__temporal_graphs)
 
-    def get_nodes(self) -> typ.List[TemporalNode]:
+    def get_nodes(self) -> typ.List['TemporalNode']:
         # TODO: Get nodes out of nodes_with_attributes
         pass
 
-    def get_node(self, node_id: int) -> TemporalNode:
+    def get_node(self, node_id: int) -> 'TemporalNode':
         # TODO: get nodes out of nodes_with_attributes
         pass
 
 
 class Graph(object):
-    def __init__(self, edges: typ.List[Edge]):
+    def __init__(self, edges: typ.List['Edge']):
         self.__edges = edges
 
-    def get_edges(self) -> typ.List[Edge]:
+    def get_edges(self) -> typ.List['Edge']:
         return self.__edges
 
-    def get_edge(self, node1: int, node2: int) -> Edge:
+    def get_edge(self, node1: int, node2: int) -> 'Edge':
         if [(node1, node2) for node1, node2 in self.__edges]:
             return True
         else:
@@ -99,7 +99,7 @@ class TemporalNode(object):
     def update_global_attribute(self, name: str, value: AttributeValue):
         pass
 
-    def update_local_attribute(self, name: str, values: typ.List[AttributeError]):
+    def update_local_attribute(self, name: str, values: typ.List[AttributeValue]):
         pass
 
 
