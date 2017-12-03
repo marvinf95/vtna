@@ -55,20 +55,29 @@ class TemporalGraph(object):
     def __getitem__(self, time_step: int) -> 'Graph':
         return self.__temporal_graphs.get[time_step]
 
-    #def __iter__(self) -> Iterable[Graph]:
-    #    # TODO: Option to iterate over __temporal_graphs and give back the specified graph
-    #    pass
+    def __iter__(self):
+        self.n = 0
+        return self
+
+    def __next__(self):
+        if self.n <= len(self.__temporal_graphs):
+            self.n += 1
+            return self.__temporal_graphs[self.n]
+        else:
+            raise StopIteration
 
     def __len__(self):
         return len(self.__temporal_graphs)
 
     def get_nodes(self) -> typ.List['TemporalNode']:
-        # TODO: Get nodes out of nodes_with_attributes
-        pass
+        __nodes = []
+        for node in meta_table.keys():
+            __nodes.extend(node)
+        return __nodes
 
     def get_node(self, node_id: int) -> 'TemporalNode':
         # TODO: get nodes out of nodes_with_attributes
-        pass
+        return node_id
 
 
 class Graph(object):
@@ -90,12 +99,15 @@ class TemporalNode(object):
         pass
 
     def get_id(self) -> int:
-        pass
+        return node_id
 
     def get_global_attribute(self, name: str) -> AttributeValue:
-        pass
+        # TODO: Exception if attribute dont exists
+        return meta_attributes[name]
 
     def get_local_attribute(self, name: str, time_step: int) -> AttributeValue:
+        # TODO: Exception if time_step not exists
+        # TODO: Exception if attribute dont exists
         pass
 
     def update_global_attribute(self, name: str, value: AttributeValue):
@@ -107,15 +119,27 @@ class TemporalNode(object):
 
 class Edge(object):
     def __init__(self, node1: int, node2: int, time_stamps: typ.List[int]):
-        pass
+        self.__reduced_node_list = []
+        for i in time_stamps:
+            self.__reduced_node_list.extend(edge_table[i])
+        print(self.__reduced_node_list)
 
     def get_incident_nodes(self) -> typ.Tuple[int, int]:
-        pass
+        # TODO: What is meant with incident_nodes?
+        return (node1, node2)
 
     def get_count(self) -> int:
-        pass
+        count_edges = 0
+        for x, y, z in self.__reduced_node_list:
+            if y == node1 and z == node2 or y == node2 and z == node1:
+                count_edges += 1
+        return count_edges
 
     def get_timestamps(self) -> typ.List[int]:
-        pass
+        edge_timestamps = []
+        for x, y, z in self.__reduced_node_list:
+            if y == node1 and z == node2 or y == node2 and z == node1:
+                edge_timestamps.extend(x)
+        return edge_timestamps
 
     # We may add edge measures in the future.
