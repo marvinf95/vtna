@@ -155,8 +155,8 @@ class MetadataTable(object):
             KeyError: If specified node does not exist in metadata table.
             TypeError: If parameter node is not of type int.
         """
-        if isinstance(node, (int, np.integer)):
-            raise TypeError(f'type {int} or {np.integer} expected, received type {type(node)}')
+        #if isinstance(node, (int, np.integer)):
+        #    raise TypeError(f'type {int} or {np.integer} expected, received type {type(node)}')
         return self.__table.ix[node].to_dict()
 
     def keys(self) -> typ.List[int]:
@@ -173,4 +173,3 @@ class BadOrderError(Exception):
     def __init__(self, ordered_categories: typ.List[str], categories: typ.List[str], attribute: str):
         self.message = f'Provided order {ordered_categories} does not match up with categories {categories} ' \
                        f'of attribute {attribute}'
-
