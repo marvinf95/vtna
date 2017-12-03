@@ -58,7 +58,7 @@ class TemporalGraph(object):
         return len(self.__temporal_graphs)
 
     def get_nodes(self) -> typ.List[TemporalNode]:
-        # Get nodes out of nodes_with_attributes
+        # TODO: Get nodes out of nodes_with_attributes
         pass
 
     def get_node(self, node_id: int) -> TemporalNode:
