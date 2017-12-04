@@ -155,7 +155,7 @@ class MetadataTable(object):
             KeyError: If specified node does not exist in metadata table.
             TypeError: If parameter node is not of type int.
         """
-        if isinstance(node, (int, np.integer)):
+        if not isinstance(node, (int, np.integer)):
             raise TypeError(f'type {int} or {np.integer} expected, received type {type(node)}')
         return self.__table.ix[node].to_dict()
 
