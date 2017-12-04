@@ -22,6 +22,7 @@ class TemporalGraph(object):
             granularity: Granularity defines the timesteps, for which the different graphs will be created.
         """
         # Create a dictionary with the start and the end of timestamps: key = number of timestep, value = end of timestep
+        self.__meta_table = meta_table
         self.__timesteps = {}
         end_interval = edge_table.get_earliest_timestamp() + granularity
         interval_number = 0
@@ -53,7 +54,7 @@ class TemporalGraph(object):
             self.__temporal_graphs.update({key: self.__temp_graph})
 
     def __getitem__(self, time_step: int) -> 'Graph':
-        return self.__temporal_graphs.get[time_step]
+        return self.__temporal_graphs.get(time_step)
 
     def __iter__(self):
         self.n = 0
@@ -71,8 +72,8 @@ class TemporalGraph(object):
 
     def get_nodes(self) -> typ.List['TemporalNode']:
         __nodes = []
-        for node in meta_table.keys():
-            __nodes.extend(node)
+        for node in self.__meta_table.keys():
+            __nodes.append(node)
         return __nodes
 
     def get_node(self, node_id: int) -> 'TemporalNode':
@@ -82,7 +83,7 @@ class TemporalGraph(object):
 
 class Graph(object):
     def __init__(self, edges: typ.List['Edge']):
-        self.__edges = edges
+        self.__edges = self.edge()
 
     def get_edges(self) -> typ.List['Edge']:
         return self.__edges
