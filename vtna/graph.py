@@ -73,12 +73,11 @@ class TemporalGraph(object):
     def get_nodes(self) -> typ.List['TemporalNode']:
         __nodes = []
         for node in self.__meta_table.keys():
-            __nodes.append(node)
+            __nodes.append(TemporalNode(node, self.__meta_table[node]))
         return __nodes
 
     def get_node(self, node_id: int) -> 'TemporalNode':
-        # TODO: get nodes out of nodes_with_attributes
-        return node_id
+        return TemporalNode(node_id, self.__meta_table[node_id])
 
 
 class Graph(object):
