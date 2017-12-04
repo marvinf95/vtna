@@ -7,6 +7,12 @@ import typing as typ
 import vtna.graph
 import vtna.utility as util
 
+import networkx as nx
+
+# Type aliases
+NodeID = int
+Timestep = int
+
 
 class NodeMeasure(util.Describable, metaclass=abc.ABCMeta):
     @abc.abstractmethod
@@ -33,7 +39,7 @@ class NodeMeasure(util.Describable, metaclass=abc.ABCMeta):
 
 class LocalNodeMeasure(NodeMeasure, metaclass=abc.ABCMeta):
     @abc.abstractmethod
-    def __getitem__(self, node_id: int) -> typ.Dict[int, float]:
+    def __getitem__(self, node_id: int) -> typ.List[float]:
         """Returns list of timestep measures for node node_id"""
         return super().__getitem__(node_id)
 
@@ -52,17 +58,16 @@ class LocalDegreeCentrality(LocalNodeMeasure):
     def __init__(self, graph: vtna.graph.TemporalGraph):
         super().__init__(graph)
         self.temporal_graph = graph
-        self.degree_centrality_dict = []
+        self.degree_centrality_dict: typ.Dict[NodeID, typ.List[float]] = dict()
+
         for node in self.temporal_graph.get_nodes():
             node_dc = []
-            time = 0
             for localGraph in self.temporal_graph:
-                if not node_dc[time]:
-                    node_dc[time] = 0
+                node_degree = 0
                 for edge in localGraph.get_edges():
                     if node.get_id() in edge.get_incident_nodes():
-                        node_dc[time] += edge.get_count()
-                time += 1
+                        node_degree += edge.get_count()
+                node_dc.append(node_degree)
             self.degree_centrality_dict[node.get_id()] = node_dc
 
     def get_name(self) -> str:
@@ -77,7 +82,7 @@ class LocalDegreeCentrality(LocalNodeMeasure):
                                         self.degree_centrality_dict[
                                             node.get_id()])
 
-    def __getitem__(self, node_id: int) -> typ.Dict[int, float]:
+    def __getitem__(self, node_id: int) -> typ.List[float]:
         super().__getitem__(node_id)
         return self.degree_centrality_dict[node_id]
 
@@ -108,34 +113,58 @@ class GlobalDegreeCentrality(GlobalNodeMeasure):
         return self.degree_centrality[node_id]
 
 
-class LocalBetweennessCentraility(LocalNodeMeasure):
-    def __init__(self):
-        pass
+class LocalBetweennessCentrality(LocalNodeMeasure):
+    def __init__(self, graph: vtna.graph.TemporalGraph):
+        super().__init__(graph)
+        self.temporal_graph = graph
+        self.bc_dict: typ.Dict[NodeID, typ.List[float]] = dict()
+
+        # Initialize empty lists for every node, because not every node
+        # exists in every local graph
+        for node in self.temporal_graph.get_nodes():
+            if node.get_id() not in self.bc_dict:
+                self.bc_dict[node.get_id()] = len(self.temporal_graph)*[0]
+        # We also have to use an index because appending won't work with
+        # nodes missing in some local graphs
+        timestep = 0
+        for local_graph in self.temporal_graph:
+            nx_graph = util.graph2networkx(local_graph)
+            # TODO: Should this be normalized? NetworkX default is True
+            # TODO: Additional measure that accounts for edge weights?
+            for (node_id, bc) in nx.betweenness_centrality(nx_graph,
+                                                     normalized=True):
+                self.bc_dict[node_id][timestep] = bc
+            timestep += 1
 
     def get_name(self) -> str:
         return "Local Betweenness Centrality"
 
     def get_description(self) -> str:
-        return "Calculates 'importantness' of each node, defined by amount " \
-                "of shortest paths in the local graph through this node."
+        return "Calculates Betweenness Centrality of each node, defined by " \
+                "amount of shortest paths in the local graph through this " \
+               "node."
 
-    def __getitem__(self, node_id: int) -> typ.Dict[int, float]:
-        pass
+    def __getitem__(self, node_id: int) -> typ.List[float]:
+        return self.bc_dict[node_id]
 
     def add_to_graph(self):
-        pass
+        for (node_id, time_cent_list) in self.bc_dict:
+            self.temporal_graph.get_node(node_id).update_local_attribute(
+                self.get_name(), time_cent_list)
 
 
 class GlobalBetweennessCentrality(GlobalNodeMeasure):
-    def __init__(self):
+    def __init__(self, graph: vtna.graph.TemporalGraph):
+        super().__init__(graph)
         pass
 
     def get_name(self) -> str:
         return "Global Betweenness Centrality"
 
     def get_description(self) -> str:
-        return "Calculates 'importantness' of each node, defined by amount " \
-                "of shortest paths in the global graph through this node."
+        return "Calculates Betweenness Centrality of each node, defined by " \
+                "amount of shortest paths in the global graph through this " \
+               "node."
 
     def __getitem__(self, node_id: int) -> float:
         pass

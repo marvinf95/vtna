@@ -55,7 +55,7 @@ class TemporalNode(object):
     def update_global_attribute(self, name: str, value: AttributeValue):
         pass
 
-    def update_local_attribute(self, name: str, values: typ.List[AttributeError]):
+    def update_local_attribute(self, name: str, values: typ.List[AttributeValue]):
         pass
 
 
