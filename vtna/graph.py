@@ -96,14 +96,15 @@ class Graph(object):
 
 class TemporalNode(object):
     def __init__(self, node_id: int, meta_attributes: typ.Dict[str, str]):
-        pass
+        self.__node_id = node_id
 
     def get_id(self) -> int:
-        return node_id
+        return self.__node_id
 
     def get_global_attribute(self, name: str) -> AttributeValue:
         # TODO: Exception if attribute dont exists
-        return meta_attributes[name]
+        # TODO: Float?
+        return AttributeValue(meta_attributes[name], 0.0)
 
     def get_local_attribute(self, name: str, time_step: int) -> AttributeValue:
         # TODO: Exception if time_step not exists
