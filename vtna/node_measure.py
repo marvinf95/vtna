@@ -20,7 +20,7 @@ class NodeMeasure(util.Describable, metaclass=abc.ABCMeta):
     def __init__(self, graph: vtna.graph.TemporalGraph):
         if type(graph) != vtna.graph.TemporalGraph:
             raise TypeError(
-                f'type {vtna.graph.TemporalGraph} expected, received type '\
+                f'type {vtna.graph.TemporalGraph} expected, received type ' \
                 f'{type(graph)}')
 
     @abc.abstractmethod
@@ -52,6 +52,21 @@ class GlobalNodeMeasure(NodeMeasure, metaclass=abc.ABCMeta):
     def __getitem__(self, node_id: int) -> float:
         """Returns global measure for node node_id"""
         return super().__getitem__(node_id)
+
+
+def _add_local_edge_weights(nx_graph: nx.Graph, local_graph: vtna.graph.Graph):
+    max_weight = max([edge.get_count() for edge in local_graph.get_edges()])
+    for edge in local_graph.get_edges():
+        n1 = edge.get_incident_nodes()[0]
+        n2 = edge.get_incident_nodes()[1]
+        nx_graph.edges[n1, n2]['weight'] = max_weight - edge.get_count()
+
+
+def _add_global_edge_weights(nx_graph: nx.Graph,
+                             local_graph: vtna.graph.TemporalGraph):
+    max_weight = max([e['count'] for e in nx_graph.edges()])
+    for edge in nx_graph:
+        edge['weight'] = max_weight - edge['count']
 
 
 # Implementations
@@ -98,8 +113,7 @@ class GlobalDegreeCentrality(GlobalNodeMeasure):
         self._dc_dict = dict()
         local_dc = LocalDegreeCentrality(graph)
         for node in graph.get_nodes():
-            self._dc_dict[node.get_id()] = sum(
-                local_dc[node.get_id()])
+            self._dc_dict[node.get_id()] = sum(local_dc[node.get_id()])
 
     def get_name(self) -> str:
         return "Global Degree Centrality"
@@ -111,8 +125,7 @@ class GlobalDegreeCentrality(GlobalNodeMeasure):
     def add_to_graph(self):
         for node in self._temporal_graph.get_nodes():
             node.update_global_attribute(self.get_name(),
-                                         self._dc_dict[
-                                             node.get_id()])
+                                         self._dc_dict[node.get_id()])
 
     def __getitem__(self, node_id: int) -> float:
         super().__getitem__(node_id)
@@ -135,10 +148,11 @@ class LocalBetweennessCentrality(LocalNodeMeasure):
         timestep = 0
         for local_graph in self._temporal_graph:
             nx_graph = util.graph2networkx(local_graph)
+            _add_local_edge_weights(nx_graph, local_graph)
             # TODO: Should this be normalized? NetworkX default is True
-            # TODO: Additional measure that accounts for edge weights?
             for (node_id, bc) in nx.betweenness_centrality(nx_graph,
-                                                           normalized=True):
+                                                           normalized=True,
+                                                           weight='weight'):
                 self._bc_dict[node_id][timestep] = bc
             timestep += 1
 
@@ -166,9 +180,10 @@ class GlobalBetweennessCentrality(GlobalNodeMeasure):
         self._bc_dict: typ.Dict[NodeID, float]
 
         nx_graph = util.temporal_graph2networkx(self._temporal_graph)
+        _add_global_edge_weights(nx_graph, self._temporal_graph)
         # TODO: Should this be normalized? NetworkX default is True
-        # TODO: Additional measure that accounts for edge weights?
-        self._bc_dict = nx.betweenness_centrality(nx_graph, normalized=True)
+        self._bc_dict = nx.betweenness_centrality(nx_graph, normalized=True,
+                                                  weight='weight')
 
     def get_name(self) -> str:
         return "Global Betweenness Centrality"
@@ -203,8 +218,9 @@ class LocalClosenessCentrality(LocalNodeMeasure):
         timestep = 0
         for local_graph in self._temporal_graph:
             nx_graph = util.graph2networkx(local_graph)
-            # TODO: Additional measure that accounts for edge weights?
-            for (node_id, bc) in nx.closeness_centrality(nx_graph):
+            _add_local_edge_weights(nx_graph, local_graph)
+            for (node_id, bc) in nx.closeness_centrality(nx_graph,
+                                                         distance='weight'):
                 self._cc_dict[node_id][timestep] = bc
             timestep += 1
 
@@ -232,8 +248,8 @@ class GlobalClosenessCentrality(GlobalNodeMeasure):
         self._bc_dict: typ.Dict[NodeID, float]
 
         nx_graph = util.temporal_graph2networkx(self._temporal_graph)
-        # TODO: Additional measure that accounts for edge weights?
-        self._bc_dict = nx.closeness_centrality(nx_graph)
+        _add_global_edge_weights(nx_graph, self._temporal_graph)
+        self._bc_dict = nx.closeness_centrality(nx_graph, distance='weight')
 
     def get_name(self) -> str:
         return "Global Closeness Centrality"
