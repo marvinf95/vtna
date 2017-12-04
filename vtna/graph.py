@@ -106,7 +106,8 @@ class Graph(object):
 
     def get_edge(self, node1: int, node2: int) -> 'Edge':
         if [item for item in self.__edges if item[0] == node1 and item[1] == node2 or item[1] == node1 and item[0] == node2]:
-            return Edge(node1, node2)
+            found_edge, = [item for item in self.__edges if item[0] == node1 and item[1] == node2]
+            return Edge(found_edge[0],found_edge[1],found_edge[2])
         else:
             return False
 
