@@ -65,7 +65,7 @@ def _add_local_edge_weights(nx_graph: nx.Graph, local_graph: vtna.graph.Graph):
 def _add_global_edge_weights(nx_graph: nx.Graph,
                              local_graph: vtna.graph.TemporalGraph):
     max_weight = max([e['count'] for e in nx_graph.edges()])
-    for edge in nx_graph:
+    for edge in nx_graph.edges():
         edge['weight'] = max_weight - edge['count']
 
 
@@ -152,7 +152,8 @@ class LocalBetweennessCentrality(LocalNodeMeasure):
             # TODO: Should this be normalized? NetworkX default is True
             for (node_id, bc) in nx.betweenness_centrality(nx_graph,
                                                            normalized=True,
-                                                           weight='weight'):
+                                                           weight='weight'
+                                                           ).items():
                 self._bc_dict[node_id][timestep] = bc
             timestep += 1
 
@@ -168,7 +169,7 @@ class LocalBetweennessCentrality(LocalNodeMeasure):
         return self._bc_dict[node_id]
 
     def add_to_graph(self):
-        for (node_id, time_cent_list) in self._bc_dict:
+        for (node_id, time_cent_list) in self._bc_dict.items():
             self._temporal_graph.get_node(node_id).update_local_attribute(
                 self.get_name(), time_cent_list)
 
@@ -197,7 +198,7 @@ class GlobalBetweennessCentrality(GlobalNodeMeasure):
         return self._bc_dict[node_id]
 
     def add_to_graph(self):
-        for (node_id, bc) in self._bc_dict:
+        for (node_id, bc) in self._bc_dict.items():
             self._temporal_graph.get_node(node_id).update_global_attribute(
                 self.get_name(), bc)
 
@@ -220,7 +221,8 @@ class LocalClosenessCentrality(LocalNodeMeasure):
             nx_graph = util.graph2networkx(local_graph)
             _add_local_edge_weights(nx_graph, local_graph)
             for (node_id, bc) in nx.closeness_centrality(nx_graph,
-                                                         distance='weight'):
+                                                         distance='weight'
+                                                         ).items():
                 self._cc_dict[node_id][timestep] = bc
             timestep += 1
 
@@ -236,7 +238,7 @@ class LocalClosenessCentrality(LocalNodeMeasure):
         return self._cc_dict[node_id]
 
     def add_to_graph(self):
-        for (node_id, time_cent_list) in self._cc_dict:
+        for (node_id, time_cent_list) in self._cc_dict.items():
             self._temporal_graph.get_node(node_id).update_local_attribute(
                 self.get_name(), time_cent_list)
 
@@ -263,6 +265,6 @@ class GlobalClosenessCentrality(GlobalNodeMeasure):
         return self._bc_dict[node_id]
 
     def add_to_graph(self):
-        for (node_id, bc) in self._bc_dict:
+        for (node_id, bc) in self._bc_dict.items():
             self._temporal_graph.get_node(node_id).update_global_attribute(
                 self.get_name(), bc)
