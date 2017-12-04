@@ -1,6 +1,6 @@
-__all__ = ['LocalDegreeCentrality',
-           'GlobalDegreeCentrality', 'LocalBetweennessCentrality',
-           'GlobalBetweennessCentrality']  # Only the actual implementations
+__all__ = ['LocalDegreeCentrality', 'GlobalDegreeCentrality',
+           'LocalBetweennessCentrality', 'GlobalBetweennessCentrality',
+           'LocalClosenessCentrality', 'GlobalClosenessCentrality']
 
 import abc
 import typing as typ
@@ -177,6 +177,71 @@ class GlobalBetweennessCentrality(GlobalNodeMeasure):
         return "Calculates Betweenness Centrality of each node, defined by " \
                "amount of shortest paths in the global graph through this " \
                "node."
+
+    def __getitem__(self, node_id: int) -> float:
+        return self._bc_dict[node_id]
+
+    def add_to_graph(self):
+        for (node_id, bc) in self._bc_dict:
+            self._temporal_graph.get_node(node_id).update_global_attribute(
+                self.get_name(), bc)
+
+
+class LocalClosenessCentrality(LocalNodeMeasure):
+    def __init__(self, graph: vtna.graph.TemporalGraph):
+        super().__init__(graph)
+        self._temporal_graph = graph
+        self._cc_dict: typ.Dict[NodeID, typ.List[float]] = dict()
+
+        # Initialize empty lists for every node, because not every node
+        # exists in every local graph
+        for node in self._temporal_graph.get_nodes():
+            if node.get_id() not in self._cc_dict:
+                self._cc_dict[node.get_id()] = len(self._temporal_graph) * [0]
+        # We also have to use an index because appending won't work with
+        # nodes missing in some local graphs
+        timestep = 0
+        for local_graph in self._temporal_graph:
+            nx_graph = util.graph2networkx(local_graph)
+            # TODO: Additional measure that accounts for edge weights?
+            for (node_id, bc) in nx.closeness_centrality(nx_graph):
+                self._cc_dict[node_id][timestep] = bc
+            timestep += 1
+
+    def get_name(self) -> str:
+        return "Local Closeness Centrality"
+
+    def get_description(self) -> str:
+        return "Calculates Closeness Centrality of each node, defined by " \
+               "the sum of the length of the shortest paths in the local " \
+               "graph through this node."
+
+    def __getitem__(self, node_id: int) -> typ.List[float]:
+        return self._cc_dict[node_id]
+
+    def add_to_graph(self):
+        for (node_id, time_cent_list) in self._cc_dict:
+            self._temporal_graph.get_node(node_id).update_local_attribute(
+                self.get_name(), time_cent_list)
+
+
+class GlobalClosenessCentrality(GlobalNodeMeasure):
+    def __init__(self, graph: vtna.graph.TemporalGraph):
+        super().__init__(graph)
+        self._temporal_graph = graph
+        self._bc_dict: typ.Dict[NodeID, float]
+
+        nx_graph = util.temporal_graph2networkx(self._temporal_graph)
+        # TODO: Additional measure that accounts for edge weights?
+        self._bc_dict = nx.closeness_centrality(nx_graph)
+
+    def get_name(self) -> str:
+        return "Global Closeness Centrality"
+
+    def get_description(self) -> str:
+        return "Calculates Closeness Centrality of each node, defined by " \
+               "the sum of the length of the shortest paths in the global " \
+               "graph through this node."
 
     def __getitem__(self, node_id: int) -> float:
         return self._bc_dict[node_id]
