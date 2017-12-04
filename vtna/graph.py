@@ -54,7 +54,7 @@ class TemporalGraph(object):
             self.__temporal_graphs.update({key: self.__temp_graph})
 
     def __getitem__(self, time_step: int) -> 'Graph':
-        return self.__temporal_graphs.get(time_step)
+        return Graph(self.__temporal_graphs.get(time_step).edges())
 
     def __iter__(self):
         self.n = 0
@@ -63,7 +63,7 @@ class TemporalGraph(object):
     def __next__(self):
         if self.n <= len(self.__temporal_graphs):
             self.n += 1
-            return self.__temporal_graphs[self.n]
+            return self.__temporal_graphs[self.n].edges()
         else:
             raise StopIteration
 
@@ -83,14 +83,14 @@ class TemporalGraph(object):
 
 class Graph(object):
     def __init__(self, edges: typ.List['Edge']):
-        self.__edges = self.edge()
+        self.__edges = edges
 
     def get_edges(self) -> typ.List['Edge']:
         return self.__edges
 
     def get_edge(self, node1: int, node2: int) -> 'Edge':
-        if [(node1, node2) for node1, node2 in self.__edges]:
-            return True
+        if [item for item in self.__edges if item[0] == node1 and item[1] == node2 or item[1] == node1 and item[0] == node2]:
+            return (node1, node2)
         else:
             return False
 

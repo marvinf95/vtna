@@ -21,6 +21,7 @@ print(dir(graph_two))
 
 print(graph_two.get_edges())
 
+
 #edge = graph.Edge(55,202,[1385982040,1385982080,1385982240,1385982260])
 #print(edge.get_count())
 
