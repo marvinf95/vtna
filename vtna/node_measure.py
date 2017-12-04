@@ -1,5 +1,5 @@
 __all__ = ['LocalDegreeCentrality',
-           'GlobalDegreeCentrality']  # Only the actual implementations
+           'GlobalDegreeCentrality', 'LocalBetweennessCentrality', 'GlobalBetweennessCentrality']  # Only the actual implementations
 
 import abc
 import typing as typ
