@@ -21,7 +21,7 @@ graph_two = graphs[2]
 #print(graphs.get_node(634))
 #print(type(graphs.get_node(634)))
 
-#print(graph_two.get_edges())
+print(graph_two.get_edges())
 
 
 #edge = graph.Edge(55,202,[1385982040,1385982080,1385982240,1385982260])
