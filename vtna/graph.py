@@ -44,19 +44,31 @@ class TemporalGraph(object):
         graph_nodes.add_nodes_from(self.__nodes_with_attributes)
 
         # Create __temporal_graphs with networkx
-        self.__temp_graph = nx.Graph()
-        for key, value in self.__timesteps.items():
-            self.__temp_graph = graph_nodes.copy()
-            __temp_edge_table = list(edge_table[(value - granularity):value])
-            __temp_edge_table = [(t[1], t[2]) for t in __temp_edge_table]
-            self.__temp_graph.add_edges_from(__temp_edge_table)
-            self.__temporal_graphs.update({key: self.__temp_graph})
+        #self.__temp_graph = nx.Graph()
+        #for key, value in self.__timesteps.items():
+        #    self.__temp_graph = graph_nodes.copy()
+        #    __temp_edge_table = list(edge_table[(value - granularity):value])
+        #    __temp_edge_table = [(t[1], t[2]) for t in __temp_edge_table]
+        #    self.__temp_graph.add_edges_from(__temp_edge_table)
+        #    self.__temporal_graphs.update({key: self.__temp_graph})
 
         self.__temporal_edges_graphs = {}
         for key, value in self.__timesteps.items():
             __temp_edge_table = list(edge_table[(value - granularity):value])
+            __temp_edge_table = [(t[1], t[2], t[0]) for t in __temp_edge_table]
+            __temp_edge_table = [(t[1], t[0], t[2]) if t[1] < t[0] else (t[0], t[1], t[2]) for t in __temp_edge_table]
+            # Check if node1 and node2 are the same. If thats the case, create new element with list of timestamp
+            totals = {}
+            for node1, node2, timestamp in __temp_edge_table:
+                if (node1, node2) not in totals:
+                    totals[(node1, node2)] = [timestamp]
+                else:
+                    totals[(node1, node2)].append(timestamp)
+            __temp_edge_table = []
+            for k, v in totals.items():
+                temp = [k[0],k[1],v]
+                __temp_edge_table.append(temp)
             self.__temporal_edges_graphs.update({key: __temp_edge_table})
-        #print(self.__temporal_edges_graphs)
 
     def __getitem__(self, time_step: int) -> 'Graph':
         return Graph(self.__temporal_edges_graphs.get(time_step))
@@ -66,14 +78,14 @@ class TemporalGraph(object):
         return self
 
     def __next__(self):
-        if self.n <= len(self.__temporal_graphs):
+        if self.n <= len(self.__temporal_edges_graphs):
             self.n += 1
-            return self.__temporal_graphs[self.n].edges()
+            return self.__temporal_edges_graphs.get(self.n)
         else:
             raise StopIteration
 
     def __len__(self):
-        return len(self.__temporal_graphs)
+        return len(self.__temporal_edges_graphs)
 
     def get_nodes(self) -> typ.List['TemporalNode']:
         __nodes = []
@@ -93,7 +105,7 @@ class Graph(object):
         return self.__edges
 
     def get_edge(self, node1: int, node2: int) -> 'Edge':
-        if [item for item in self.__edges if item[1] == node1 and item[2] == node2 or item[2] == node1 and item[1] == node2]:
+        if [item for item in self.__edges if item[0] == node1 and item[1] == node2 or item[1] == node1 and item[0] == node2]:
             return Edge(node1, node2)
         else:
             return False
@@ -124,27 +136,16 @@ class TemporalNode(object):
 
 class Edge(object):
     def __init__(self, node1: int, node2: int, time_stamps: typ.List[int]):
-        self.__reduced_node_list = []
-        for i in time_stamps:
-            self.__reduced_node_list.extend(edge_table[i])
-        print(self.__reduced_node_list)
+        self.__time_stamps = time_stamps
 
     def get_incident_nodes(self) -> typ.Tuple[int, int]:
         # TODO: What is meant with incident_nodes?
         return (node1, node2)
 
     def get_count(self) -> int:
-        count_edges = 0
-        for x, y, z in self.__reduced_node_list:
-            if y == node1 and z == node2 or y == node2 and z == node1:
-                count_edges += 1
-        return count_edges
+        return len(self.__time_stamps)
 
     def get_timestamps(self) -> typ.List[int]:
-        edge_timestamps = []
-        for x, y, z in self.__reduced_node_list:
-            if y == node1 and z == node2 or y == node2 and z == node1:
-                edge_timestamps.extend(x)
-        return edge_timestamps
+        return self.__time_stamps
 
     # We may add edge measures in the future.
