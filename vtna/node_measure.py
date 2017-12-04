@@ -1,5 +1,6 @@
 __all__ = ['LocalDegreeCentrality',
-           'GlobalDegreeCentrality', 'LocalBetweennessCentrality', 'GlobalBetweennessCentrality']  # Only the actual implementations
+           'GlobalDegreeCentrality', 'LocalBetweennessCentrality',
+           'GlobalBetweennessCentrality']  # Only the actual implementations
 
 import abc
 import typing as typ
@@ -156,7 +157,13 @@ class LocalBetweennessCentrality(LocalNodeMeasure):
 class GlobalBetweennessCentrality(GlobalNodeMeasure):
     def __init__(self, graph: vtna.graph.TemporalGraph):
         super().__init__(graph)
-        pass
+        self.temporal_graph = graph
+        self.bc_dict: typ.Dict[NodeID, float]
+
+        nx_graph = util.temporal_graph2networkx(self.temporal_graph)
+        # TODO: Should this be normalized? NetworkX default is True
+        # TODO: Additional measure that accounts for edge weights?
+        self.bc_dict = nx.betweenness_centrality(nx_graph, normalized=True)
 
     def get_name(self) -> str:
         return "Global Betweenness Centrality"
@@ -167,7 +174,9 @@ class GlobalBetweennessCentrality(GlobalNodeMeasure):
                "node."
 
     def __getitem__(self, node_id: int) -> float:
-        pass
+        return self.bc_dict[node_id]
 
     def add_to_graph(self):
-        pass
+        for (node_id, bc) in self.bc_dict:
+            self.temporal_graph.get_node(node_id).update_global_attribute(
+                self.get_name(), bc)
