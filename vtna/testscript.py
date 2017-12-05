@@ -18,12 +18,16 @@ graphs = graphu.TemporalGraph(edges, meta, 20)
 graph_two = graphs[2]
 #for i in graphs.get_nodes(): print(i[0])
 #print(dir(graph_two))
-print(graphs.get_node(634).get_global_attribute('1'))
-graphs.get_node(634).update_global_attribute('1','anders')
-print(graphs.get_node(634).get_global_attribute('1'))
-graphs.get_node(634).update_local_attribute('1',['anders','bla','bla'])
-print(graphs.get_node(634).get_local_attribute('1',1))
+#print(graphs.get_node(634).get_global_attribute('1'))
+#graphs.get_node(634).update_global_attribute('1','anders')
+#print(graphs.get_node(634).get_global_attribute('1'))
+#graphs.get_node(634).update_local_attribute('1',['anders','bla','bla'])
+#print(graphs.get_node(634).get_local_attribute('1',1))
 
+#a = graphu.TemporalNode(1,{'bla': 'fu'})
+#print(a.get_global_attribute('bla'))
+#a.update_global_attribute('bla', 'kacke')
+#print(a.get_global_attribute('bla'))
 #print(graph_two.get_edges())
 
 

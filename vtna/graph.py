@@ -70,6 +70,10 @@ class TemporalGraph(object):
                 __temp_edge_table.append(temp)
             self.__temporal_edges_graphs.update({key: __temp_edge_table})
 
+        self.__temporal_nodes = []
+        for __nodes_with_attributes in self.__meta_table.items():
+            self.__temporal_nodes.append(TemporalNode(__nodes_with_attributes[0], __nodes_with_attributes[1]))
+
     def __getitem__(self, time_step: int) -> 'Graph':
         return Graph(self.__temporal_edges_graphs.get(time_step))
 
@@ -89,20 +93,14 @@ class TemporalGraph(object):
 
     def get_nodes(self) -> typ.List['TemporalNode']:
         #__nodes = []
-        #for node in self.__meta_table.keys():
-        #    __nodes.append(TemporalNode(node, self.__meta_table[node]))
+        #for __nodes_with_attributes in self.__meta_table.items():
+        #    __nodes.append(TemporalNode(__nodes_with_attributes[0], __nodes_with_attributes[1]))
         #return __nodes
-        __nodes = []
-        for __nodes_with_attributes in self.__meta_table.items():
-            __nodes.append(TemporalNode(__nodes_with_attributes[0], __nodes_with_attributes[1]))
-        return __nodes
-
+        return self.__temporal_nodes
 
     def get_node(self, node_id: int) -> 'TemporalNode':
-        node_attributes = self.__meta_table.items()
-        node_attributes, = [item for item in node_attributes if item[0] == node_id]
-        node_attributes = node_attributes[1]
-        return TemporalNode(node_id, node_attributes)
+        temp_node, = [item for item in self.__temporal_nodes if item.get_id() == node_id]
+        return temp_node
 
 
 class Graph(object):
