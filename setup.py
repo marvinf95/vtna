@@ -23,7 +23,8 @@ setuptools.setup(
     zip_safe=False,
     install_requires=[
         'numpy',
-        'pandas'
+        'pandas',
+        'networkx'
     ],
     test_suite='nose.collector',
     tests_require=['nose'],
