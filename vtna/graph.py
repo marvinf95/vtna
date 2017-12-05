@@ -32,25 +32,6 @@ class TemporalGraph(object):
             interval_number += 1
         # Add Graph at the last timestamp. The interval could be shorter than the other intervals
         self.__timesteps.update({interval_number: edge_table.get_latest_timestamp()})
-        #self.__timesteps += 1
-        # Create graph for every timestep
-        #self.__temporal_graphs = {}
-        #self.__nodes_with_attributes = []
-        #for node in meta_table.keys():
-        #    node_attributes = meta_table[node]
-        #    for key, value in node_attributes.items():
-        #        self.__nodes_with_attributes.append( (node, {key: value}) )
-        #graph_nodes = nx.Graph()
-        #graph_nodes.add_nodes_from(self.__nodes_with_attributes)
-
-        # Create __temporal_graphs with networkx
-        #self.__temp_graph = nx.Graph()
-        #for key, value in self.__timesteps.items():
-        #    self.__temp_graph = graph_nodes.copy()
-        #    __temp_edge_table = list(edge_table[(value - granularity):value])
-        #    __temp_edge_table = [(t[1], t[2]) for t in __temp_edge_table]
-        #    self.__temp_graph.add_edges_from(__temp_edge_table)
-        #    self.__temporal_graphs.update({key: self.__temp_graph})
 
         self.__temporal_edges_graphs = {}
         for key, value in self.__timesteps.items():
@@ -92,10 +73,6 @@ class TemporalGraph(object):
         return len(self.__temporal_edges_graphs)
 
     def get_nodes(self) -> typ.List['TemporalNode']:
-        #__nodes = []
-        #for __nodes_with_attributes in self.__meta_table.items():
-        #    __nodes.append(TemporalNode(__nodes_with_attributes[0], __nodes_with_attributes[1]))
-        #return __nodes
         return self.__temporal_nodes
 
     def get_node(self, node_id: int) -> 'TemporalNode':
@@ -129,7 +106,6 @@ class TemporalNode(object):
 
     def get_global_attribute(self, name: str) -> AttributeValue:
         # TODO: Exception if attribute dont exists
-        #return AttributeValue(self.__meta_attributes[name])
         return self.__global_attributes[name]
 
     def get_local_attribute(self, name: str, time_step: int) -> AttributeValue:
