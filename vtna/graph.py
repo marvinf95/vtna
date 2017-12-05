@@ -34,14 +34,14 @@ class TemporalGraph(object):
         self.__timesteps.update({interval_number: edge_table.get_latest_timestamp()})
         #self.__timesteps += 1
         # Create graph for every timestep
-        self.__temporal_graphs = {}
-        self.__nodes_with_attributes = []
-        for node in meta_table.keys():
-            node_attributes = meta_table[node]
-            for key, value in node_attributes.items():
-                self.__nodes_with_attributes.append( (node, {key: value}) )
-        graph_nodes = nx.Graph()
-        graph_nodes.add_nodes_from(self.__nodes_with_attributes)
+        #self.__temporal_graphs = {}
+        #self.__nodes_with_attributes = []
+        #for node in meta_table.keys():
+        #    node_attributes = meta_table[node]
+        #    for key, value in node_attributes.items():
+        #        self.__nodes_with_attributes.append( (node, {key: value}) )
+        #graph_nodes = nx.Graph()
+        #graph_nodes.add_nodes_from(self.__nodes_with_attributes)
 
         # Create __temporal_graphs with networkx
         #self.__temp_graph = nx.Graph()
@@ -88,13 +88,21 @@ class TemporalGraph(object):
         return len(self.__temporal_edges_graphs)
 
     def get_nodes(self) -> typ.List['TemporalNode']:
+        #__nodes = []
+        #for node in self.__meta_table.keys():
+        #    __nodes.append(TemporalNode(node, self.__meta_table[node]))
+        #return __nodes
         __nodes = []
-        for node in self.__meta_table.keys():
-            __nodes.append(TemporalNode(node, self.__meta_table[node]))
+        for __nodes_with_attributes in self.__meta_table.items():
+            __nodes.append(TemporalNode(__nodes_with_attributes[0], __nodes_with_attributes[1]))
         return __nodes
 
+
     def get_node(self, node_id: int) -> 'TemporalNode':
-        return TemporalNode(node_id, self.__meta_table[node_id])
+        node_attributes = self.__meta_table.items()
+        node_attributes, = [item for item in node_attributes if item[0] == node_id]
+        node_attributes = node_attributes[1]
+        return TemporalNode(node_id, node_attributes)
 
 
 class Graph(object):
@@ -115,13 +123,15 @@ class Graph(object):
 class TemporalNode(object):
     def __init__(self, node_id: int, meta_attributes: typ.Dict[str, str]):
         self.__node_id = node_id
+        self.__meta_attributes = meta_attributes
 
     def get_id(self) -> int:
         return self.__node_id
 
     def get_global_attribute(self, name: str) -> AttributeValue:
         # TODO: Exception if attribute dont exists
-        return AttributeValue(meta_attributes[name])
+        #return AttributeValue(self.__meta_attributes[name])
+        return self.__meta_attributes[name]
 
     def get_local_attribute(self, name: str, time_step: int) -> AttributeValue:
         # TODO: Exception if time_step not exists
@@ -129,7 +139,7 @@ class TemporalNode(object):
         pass
 
     def update_global_attribute(self, name: str, value: AttributeValue):
-        pass
+        self.__meta_attributes[name] = value
 
     def update_local_attribute(self, name: str, values: typ.List[AttributeValue]):
         pass
