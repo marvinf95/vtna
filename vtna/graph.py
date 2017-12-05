@@ -151,7 +151,6 @@ class Edge(object):
         self.__time_stamps = time_stamps
 
     def get_incident_nodes(self) -> typ.Tuple[int, int]:
-        # TODO: What is meant with incident_nodes?
         return (node1, node2)
 
     def get_count(self) -> int:
