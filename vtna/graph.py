@@ -123,7 +123,8 @@ class Graph(object):
 class TemporalNode(object):
     def __init__(self, node_id: int, meta_attributes: typ.Dict[str, str]):
         self.__node_id = node_id
-        self.__meta_attributes = meta_attributes
+        self.__global_attributes = meta_attributes
+        self.__local_attributes = {}
 
     def get_id(self) -> int:
         return self.__node_id
@@ -131,18 +132,18 @@ class TemporalNode(object):
     def get_global_attribute(self, name: str) -> AttributeValue:
         # TODO: Exception if attribute dont exists
         #return AttributeValue(self.__meta_attributes[name])
-        return self.__meta_attributes[name]
+        return self.__global_attributes[name]
 
     def get_local_attribute(self, name: str, time_step: int) -> AttributeValue:
         # TODO: Exception if time_step not exists
         # TODO: Exception if attribute dont exists
-        pass
+        return self.__local_attributes[name][time_step]
 
     def update_global_attribute(self, name: str, value: AttributeValue):
-        self.__meta_attributes[name] = value
+        self.__global_attributes[name] = value
 
     def update_local_attribute(self, name: str, values: typ.List[AttributeValue]):
-        pass
+        self.__local_attributes[name] = values
 
 
 class Edge(object):
