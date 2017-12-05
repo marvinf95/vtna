@@ -58,6 +58,10 @@ class TemporalGraph(object):
 
     def __getitem__(self, time_step: int) -> 'Graph':
         """Returns the graph at the specified timestep"""
+        if not isinstance(time_step, int):
+            raise TypeError(f'type {int} expected')
+        if time_step < 0 or time_step > len(self.__timesteps):
+            raise IndexError(f'Timestep doesnt exist')
         return Graph(self.__temporal_edges_graphs.get(time_step))
 
     def __iter__(self):
@@ -83,8 +87,13 @@ class TemporalGraph(object):
 
     def get_node(self, node_id: int) -> 'TemporalNode':
         """Returns one node defined by node_id."""
-        temp_node, = [item for item in self.__temporal_nodes if item.get_id() == node_id]
-        return temp_node
+        if not isinstance(node_id, int):
+            raise TypeError(f'type {int} expected')
+        if [item for item in self.__temporal_nodes if item.get_id() == node_id]:
+            temp_node, = [item for item in self.__temporal_nodes if item.get_id() == node_id]
+            return temp_node
+        else:
+            raise IndexError(f'node_id doesnt exist')
 
 
 class Graph(object):
@@ -104,13 +113,13 @@ class Graph(object):
 
     def get_edge(self, node1: int, node2: int) -> 'Edge':
         """Returns one edge of a graph defined by node1 and node2"""
+        if not isinstance(node1, int) and not isinstance(node2, int):
+            raise TypeError(f'type {int} for node1 and node2 expected')
         if [item for item in self.__edges if item[0] == node1 and item[1] == node2 or item[1] == node1 and item[0] == node2]:
             found_edge, = [item for item in self.__edges if item[0] == node1 and item[1] == node2]
             return Edge(found_edge[0],found_edge[1],found_edge[2])
         else:
-            # TODO: Exception that edge dont exist
-            return False
-
+            raise IndexError(f'Edge doesnt exist')
 
 class TemporalNode(object):
     def __init__(self, node_id: int, meta_attributes: typ.Dict[str, str]):
@@ -135,17 +144,28 @@ class TemporalNode(object):
         Global attributes are attributes that don't change over time
         These are defined as key, value pairs.
         """
-        # TODO: Exception if attribute dont exists
-        return self.__global_attributes[name]
+        if not isinstance(name, str):
+            raise TypeError(f'type {str} for name expected')
+        if self.__global_attributes[name] != None:
+            return self.__global_attributes[name]
+        else:
+            raise IndexError(f'Global attribute does not exist')
 
     def get_local_attribute(self, name: str, time_step: int) -> AttributeValue:
         """
         Local attributes are attributes that could change per timestep.
         You could get it with a name and a time_step.
         """
+        if not isinstance(name, str):
+            raise TypeError(f'type {str} for name expected')
+        if not isinstance(time_step, int):
+            raise TypeError(f'type {int} for time_step expected')
         # TODO: Exception if time_step not exists
         # TODO: Exception if attribute dont exists
-        return self.__local_attributes[name][time_step]
+        if self.__local_attributes[name] != None and self.__local_attributes[name][time_step] != None:
+            return self.__local_attributes[name][time_step]
+        else:
+            raise IndexError(f'Name or time_step does not exist')
 
     def update_global_attribute(self, name: str, value: AttributeValue):
         """
@@ -153,6 +173,10 @@ class TemporalNode(object):
         If name is not defined yet, a new attribute gets created.
         Otherwise the value with the given name is overridden.
         """
+        if not isinstance(name, str):
+            raise TypeError(f'type {str} for name expected')
+        if not isinstance(value, (str, int)):
+            raise TypeError(f'type {str} or type {int} for value expected')
         self.__global_attributes[name] = value
 
     def update_local_attribute(self, name: str, values: typ.List[AttributeValue]):
@@ -162,7 +186,12 @@ class TemporalNode(object):
         As the second argument a list with values is required.
         In that list, the first element stands for the first timestep, the second for the second timestep and so on.
         """
-        self.__local_attributes[name] = values
+        if not isinstance(name, str):
+            raise TypeError(f'type {str} for name expected')
+        if all(isinstance(item, (str,int)) for item in values):
+            self.__local_attributes[name] = values
+        else:
+            raise TypeError(f'elements of values list must be of type {str} or {int}')
 
     # TODO: Should we add functions get_global_attributes and get_local_attributes?
 
