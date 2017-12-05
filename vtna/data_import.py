@@ -136,8 +136,8 @@ class MetadataTable(object):
         Raises:
             BadOrderError: Error is raised if provided ordered_categories does not match up with existing categories.
         """
-        if set(ordered_categories) != set(self.__table[attribute].cat.categories) and \
-           len(ordered_categories) == len(self.__table.cat.categories):
+        if set(ordered_categories) != set(self.__table[attribute].cat.categories) or \
+           len(ordered_categories) != len(self.__table[attribute].cat.categories):
             raise BadOrderError(ordered_categories, self.__table[attribute].cat.categories, attribute)
         self.__table[attribute].cat.reorder_categories(ordered_categories, ordered=True, inplace=True)
 
@@ -157,7 +157,7 @@ class MetadataTable(object):
         """
         if not isinstance(node, (int, np.integer)):
             raise TypeError(f'type {int} or {np.integer} expected, received type {type(node)}')
-        return self.__table.ix[node].to_dict()
+        return self.__table.loc[node].to_dict()
 
     def keys(self) -> typ.List[int]:
         return self.__table.index.values.tolist()

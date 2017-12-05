@@ -33,9 +33,6 @@ class TestTemporalEdgeTableGetItem(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        """ get_some_resource() is slow, to avoid calling it for each test use setUpClass()
-            and store the result as class variable
-        """
         super(TestTemporalEdgeTableGetItem, cls).setUpClass()
         cls.edges = dimp.TemporalEdgeTable('vtna/tests/data/highschool_edges.ssv')
 
@@ -82,3 +79,79 @@ class TestTemporalEdgeTableGetItem(unittest.TestCase):
             _ = TestTemporalEdgeTableGetItem.edges[:'foo']
         with self.assertRaises(TypeError):
             _ = TestTemporalEdgeTableGetItem.edges[True:int]
+
+
+class TestMetadataTableFunctionality(unittest.TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        super(TestMetadataTableFunctionality, cls).setUpClass()
+        cls.meta = dimp.MetadataTable('vtna/tests/data/highschool_meta.tsv')
+
+    def test_get_attribute_names(self):
+        names = TestMetadataTableFunctionality.meta.get_attribute_names()
+        self.assertEqual(names, {'1', '2'}, 'names are initially "1" and "2"')
+
+    def test_rename_attribute_names(self):
+        meta = dimp.MetadataTable('vtna/tests/data/highschool_meta.tsv')
+        meta.rename_attributes({'1': 'class', '2': 'gender'})
+        self.assertEqual(meta.get_attribute_names(), {'class', 'gender'})
+
+    def test_get_categories(self):
+        cat2 = TestMetadataTableFunctionality.meta.get_categories('2')
+        self.assertEqual(set(cat2), {'F', 'M', 'Unknown'}, 'correct categories returned')
+        self.assertEqual(len(cat2), 3, 'unique categories returned')
+
+    def test_order_categories(self):
+        meta = dimp.MetadataTable('vtna/tests/data/highschool_meta.tsv')
+        self.assertFalse(meta.is_ordered('1'), 'check category is unsorted initially')
+        order = ['2BIO1', '2BIO2', '2BIO3', 'MP', 'MP*1', 'MP*2', 'PC', 'PC*', 'PSI*']
+        meta.order_categories('1', order)
+        self.assertEqual(meta.get_categories('1'), order)
+        self.assertTrue(meta.is_ordered('1'))
+
+    def test_order_categories_with_one_missing_category(self):
+        with self.assertRaises(dimp.BadOrderError):
+            TestMetadataTableFunctionality.meta.order_categories('1', ['2BIO1', '2BIO2', '2BIO3', 'MP', 'MP*1', 'MP*2',
+                                                                       'PC', 'PC*'])
+
+    def test_order_categories_with_too_many_categories(self):
+        with self.assertRaises(dimp.BadOrderError):
+            TestMetadataTableFunctionality.meta.order_categories('1', ['2BIO1', '2BIO2', '2BIO3', 'MP', 'MP*1', 'MP*2',
+                                                                       'PC', 'PC*', 'PSI*', 'PSI'])
+
+    def test_order_categories_with_wrong_category(self):
+        with self.assertRaises(dimp.BadOrderError):
+            TestMetadataTableFunctionality.meta.order_categories('1', ['Cake', '2BIO2', '2BIO3', 'MP', 'MP*1', 'MP*2',
+                                                                       'PC', 'PC*', 'PSI*'])
+
+    def test_remove_order(self):
+        meta = dimp.MetadataTable('vtna/tests/data/highschool_meta.tsv')
+        self.assertFalse(meta.is_ordered('1'), 'check category is unsorted initially')
+        order = ['2BIO1', '2BIO2', '2BIO3', 'MP', 'MP*1', 'MP*2', 'PC', 'PC*', 'PSI*']
+        meta.order_categories('1', order)
+        self.assertTrue(meta.is_ordered('1'))
+        meta.remove_order('1')
+        self.assertFalse(meta.is_ordered('1'), 'category is unordered after calling remove order')
+
+    def test_getitem_with_bad_type(self):
+        with self.assertRaises(TypeError):
+            _ = TestMetadataTableFunctionality.meta['72']
+
+    def test_getitem_with_not_existing_key(self):
+        with self.assertRaises(KeyError):
+            _ = TestMetadataTableFunctionality.meta[73]
+
+    def test_getitem_with_valid_key(self):
+        attributes = TestMetadataTableFunctionality.meta[72]
+        self.assertEqual(attributes['1'], '2BIO1', 'correct first attribute')
+        self.assertEqual(attributes['2'], 'F', 'correct second attribute')
+
+    def test_keys(self):
+        self.assertEqual(len(TestMetadataTableFunctionality.meta.keys()), 114)
+
+    def test_values(self):
+        self.assertEqual(len(TestMetadataTableFunctionality.meta.values()), 114)
+
+    def test_items(self):
+        self.assertEqual(len(TestMetadataTableFunctionality.meta.items()), 114)
