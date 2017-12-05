@@ -84,7 +84,7 @@ class TemporalGraph(object):
     def __next__(self):
         if self.n <= len(self.__temporal_edges_graphs):
             self.n += 1
-            return self.__temporal_edges_graphs.get(self.n)
+            return Graph(self.__temporal_edges_graphs.get(self.n))
         else:
             raise StopIteration
 
@@ -143,13 +143,17 @@ class TemporalNode(object):
     def update_local_attribute(self, name: str, values: typ.List[AttributeValue]):
         self.__local_attributes[name] = values
 
+    # TODO: Should we add functions get_global_attributes and get_local_attributes?
+
 
 class Edge(object):
     def __init__(self, node1: int, node2: int, time_stamps: typ.List[int]):
         self.__time_stamps = time_stamps
+        self.__node1 = node1
+        self.__node2 = node2
 
     def get_incident_nodes(self) -> typ.Tuple[int, int]:
-        return (node1, node2)
+        return (self.__node1, self.__node2)
 
     def get_count(self) -> int:
         return len(self.__time_stamps)

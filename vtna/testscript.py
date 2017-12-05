@@ -9,10 +9,10 @@ meta = dimp.MetadataTable('vtna/tests/data/highschool_meta.tsv')
 print('Start building temporal graphs')
 graphs = graphu.TemporalGraph(edges, meta, 20)
 
-#i = iter(graphs)
-#print(next(i).edges())
-#print(next(i).edges())
-#print(next(i).edges())
+i = iter(graphs)
+print(next(i).edges())
+print(next(i).edges())
+print(next(i).edges())
 
 
 graph_two = graphs[2]
@@ -23,6 +23,8 @@ graph_two = graphs[2]
 #print(graphs.get_node(634).get_global_attribute('1'))
 #graphs.get_node(634).update_local_attribute('1',['anders','bla','bla'])
 #print(graphs.get_node(634).get_local_attribute('1',1))
+
+print(graphs[1].get_edge(122,255))
 
 #a = graphu.TemporalNode(1,{'bla': 'fu'})
 #print(a.get_global_attribute('bla'))
