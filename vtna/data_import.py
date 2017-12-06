@@ -173,4 +173,3 @@ class BadOrderError(Exception):
     def __init__(self, ordered_categories: typ.List[str], categories: typ.List[str], attribute: str):
         self.message = f'Provided order {ordered_categories} does not match up with categories {categories} ' \
                        f'of attribute {attribute}'
-
