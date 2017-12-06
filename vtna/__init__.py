@@ -1,2 +1,0 @@
-def cake():
-    return 'lie'

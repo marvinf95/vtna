@@ -27,5 +27,6 @@ setuptools.setup(
         'networkx'
     ],
     test_suite='nose.collector',
-    tests_require=['nose'],
+    tests_require=['nose', 'coverage'],
+    setup_requires=['nose', 'coverage']
 )

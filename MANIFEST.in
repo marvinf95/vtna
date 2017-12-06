@@ -1,2 +1,3 @@
 include README.rst
 include vtna/tests/data/*
+include setup.cfg
