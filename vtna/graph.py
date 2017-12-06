@@ -21,7 +21,6 @@ class TemporalGraph(object):
             meta_table: Its a table with attributes for nodes.
             granularity: Granularity defines the timesteps, for which the different graphs will be created.
         """
-        self.__meta_table = meta_table
         self.__graphs = list()  # type: typ.List[Graph]
         self.__nodes = dict()  # type: typ.Dict[int, TemporalNode]
         self.__interval_starts = list(range(edge_table.get_earliest_timestamp(),
@@ -36,8 +35,16 @@ class TemporalGraph(object):
             edges = [Edge(edge[0], edge[1], timestamps) for edge, timestamps in edge_timestamps.items()]
             self.__graphs.append(Graph(edges))
         # Create nodes
-        for node_id, attributes in self.__meta_table.items():
-            self.__nodes[node_id] = TemporalNode(node_id, attributes, len(self.__interval_starts))
+        if meta_table is not None:
+            for node_id, attributes in meta_table.items():
+                self.__nodes[node_id] = TemporalNode(node_id, attributes, len(self.__interval_starts))
+        else:
+            nodes = set()
+            for g in self.__graphs:
+                for e in g.get_edges():
+                    nodes.update(e.get_incident_nodes())
+            self.__nodes = dict((node_id, TemporalNode(node_id, dict(), len(self.__interval_starts)))
+                                for node_id in nodes)
 
     def __getitem__(self, time_step: int) -> 'Graph':
         """Returns the graph at the specified timestep"""
@@ -54,12 +61,6 @@ class TemporalGraph(object):
     def __len__(self):
         """Returns the number of graphs that were created cause of the defined granularity."""
         return len(self.__graphs)
-
-    def __iter__(self) -> typ.Iterable['Graph']:
-        pass
-
-    def __iter__(self) -> typ.Iterable['Graph']:
-        pass
 
     def get_nodes(self) -> typ.List['TemporalNode']:
         """Returns all nodes with attributes."""
