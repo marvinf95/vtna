@@ -1,5 +1,6 @@
 __all__ = ['TemporalGraph', 'Graph', 'TemporalNode', 'Edge']
 
+import collections as col
 import typing as typ
 
 import vtna.data_import as dimp
@@ -20,80 +21,47 @@ class TemporalGraph(object):
             meta_table: Its a table with attributes for nodes.
             granularity: Granularity defines the timesteps, for which the different graphs will be created.
         """
-        # Create a dictionary with the start and the end of timestamps: key = number of timestep, value = end of timestep
         self.__meta_table = meta_table
-        self.__timesteps = {}
-        end_interval = edge_table.get_earliest_timestamp() + granularity
-        interval_number = 0
-        while end_interval < edge_table.get_latest_timestamp():
-            self.__timesteps.update({interval_number: end_interval})
-            end_interval = end_interval + granularity
-            interval_number += 1
-        # Add Graph at the last timestamp. The interval could be shorter than the other intervals
-        self.__timesteps.update({interval_number: edge_table.get_latest_timestamp()})
-
-        # Create a dictionary that contains the edges for the graphs in the different timesteps
-        self.__temporal_edges_graphs = {}
-        for key, value in self.__timesteps.items():
-            __temp_edge_table = list(edge_table[(value - granularity):value])
-            __temp_edge_table = [(t[1], t[2], t[0]) for t in __temp_edge_table]
-            __temp_edge_table = [(t[1], t[0], t[2]) if t[1] < t[0] else (t[0], t[1], t[2]) for t in __temp_edge_table]
-            # Check if node1 and node2 are the same. If thats the case, create new element with list of timestamp
-            totals = {}
-            for node1, node2, timestamp in __temp_edge_table:
-                if (node1, node2) not in totals:
-                    totals[(node1, node2)] = [timestamp]
-                else:
-                    totals[(node1, node2)].append(timestamp)
-            __temp_edge_table = []
-            for k, v in totals.items():
-                temp = [k[0],k[1],v]
-                __temp_edge_table.append(temp)
-            self.__temporal_edges_graphs.update({key: __temp_edge_table})
-
-        # Create a list containing nodes with attributes
-        self.__temporal_nodes = []
-        for __nodes_with_attributes in self.__meta_table.items():
-            self.__temporal_nodes.append(TemporalNode(__nodes_with_attributes[0], __nodes_with_attributes[1]))
+        self.__graphs = list()  # type: typ.List[Graph]
+        self.__nodes = dict()  # type: typ.Dict[int, TemporalNode]
+        self.__interval_starts = list(range(edge_table.get_earliest_timestamp(),
+                                            edge_table.get_latest_timestamp(),
+                                            granularity))
+        # Create graphs
+        for timestep, begin in enumerate(self.__interval_starts):
+            edge_timestamps = col.defaultdict(list)
+            for timestamp, node1, node2 in edge_table[begin:begin+granularity]:
+                node1, node2 = sorted((node1, node2))
+                edge_timestamps[(node1, node2)].append(timestamp)
+            edges = [Edge(edge[0], edge[1], timestamps) for edge, timestamps in edge_timestamps.items()]
+            self.__graphs.append(Graph(edges))
+        # Create nodes
+        for node_id, attributes in self.__meta_table.items():
+            self.__nodes[node_id] = TemporalNode(node_id, attributes, len(self.__interval_starts))
 
     def __getitem__(self, time_step: int) -> 'Graph':
         """Returns the graph at the specified timestep"""
-        if not isinstance(time_step, int):
-            raise TypeError(f'type {int} expected')
-        if time_step < 0 or time_step > len(self.__timesteps):
-            raise IndexError(f'Timestep doesnt exist')
-        return Graph(self.__temporal_edges_graphs.get(time_step))
+        if time_step < 0 or time_step >= len(self.__interval_starts):
+            raise IndexError(f'Index {time_step} out of bounds')
+        return self.__graphs[time_step]
 
-    def __iter__(self):
-        """Initialises iterator."""
-        self.n = 0
-        return self
-
-    def __next__(self):
-        """Get the next graph with the iterator."""
-        if self.n <= len(self.__temporal_edges_graphs):
-            self.n += 1
-            return Graph(self.__temporal_edges_graphs.get(self.n))
-        else:
-            raise StopIteration
+    def __iter__(self) -> typ.Iterable['Graph']:
+        def __gen():
+            for graph in self.__graphs:
+                yield graph
+        return __gen()
 
     def __len__(self):
         """Returns the number of graphs that were created cause of the defined granularity."""
-        return len(self.__temporal_edges_graphs)
+        return len(self.__graphs)
 
     def get_nodes(self) -> typ.List['TemporalNode']:
         """Returns all nodes with attributes."""
-        return self.__temporal_nodes
+        return list(self.__nodes.values())
 
     def get_node(self, node_id: int) -> 'TemporalNode':
         """Returns one node defined by node_id."""
-        if not isinstance(node_id, int):
-            raise TypeError(f'type {int} expected')
-        if [item for item in self.__temporal_nodes if item.get_id() == node_id]:
-            temp_node, = [item for item in self.__temporal_nodes if item.get_id() == node_id]
-            return temp_node
-        else:
-            raise IndexError(f'node_id doesnt exist')
+        return self.__nodes[node_id]
 
 
 class Graph(object):
@@ -109,20 +77,20 @@ class Graph(object):
 
     def get_edges(self) -> typ.List['Edge']:
         """Returns edge list of graph."""
-        return self.__edges
+        return self.__edges.copy()
 
     def get_edge(self, node1: int, node2: int) -> 'Edge':
         """Returns one edge of a graph defined by node1 and node2"""
-        if not isinstance(node1, int) and not isinstance(node2, int):
-            raise TypeError(f'type {int} for node1 and node2 expected')
-        if [item for item in self.__edges if item[0] == node1 and item[1] == node2 or item[1] == node1 and item[0] == node2]:
-            found_edge, = [item for item in self.__edges if item[0] == node1 and item[1] == node2]
-            return Edge(found_edge[0],found_edge[1],found_edge[2])
-        else:
-            raise IndexError(f'Edge doesnt exist')
+        node1, node2 = sorted((node1, node2))
+        try:
+            edge = [edge for edge in self.__edges if edge.get_incident_nodes() == (node1, node2)][0]
+        except IndexError:
+            raise KeyError(f'Edge of nodes ({node1}, {node2}) does not exist')
+        return edge
+
 
 class TemporalNode(object):
-    def __init__(self, node_id: int, meta_attributes: typ.Dict[str, str]):
+    def __init__(self, node_id: int, meta_attributes: typ.Dict[str, str], n_timesteps: int):
         """
         Specifies the nodes of the graph. A temporal node is specified through an node_id
         and a list of global attributes for that node.
@@ -131,9 +99,10 @@ class TemporalNode(object):
             node_id: ID of the node.
             meta_attributes: Dictionary of attributes for a node.
         """
-        self.__node_id = node_id
-        self.__global_attributes = meta_attributes
-        self.__local_attributes = {}
+        self.__node_id = node_id  # type: int
+        self.__global_attributes = meta_attributes  # type: typ.Dict[str, AttributeValue]
+        self.__local_attributes = {}  # type: typ.Dict[str, typ.List[AttributeValue]]
+        self.__n_timesteps = n_timesteps
 
     def get_id(self) -> int:
         """ID of the temporal node."""
@@ -145,11 +114,8 @@ class TemporalNode(object):
         These are defined as key, value pairs.
         """
         if not isinstance(name, str):
-            raise TypeError(f'type {str} for name expected')
-        if self.__global_attributes[name] != None:
-            return self.__global_attributes[name]
-        else:
-            raise IndexError(f'Global attribute does not exist')
+            raise TypeError(f'type {str} for name expected, received type {type(name)}')
+        return self.__global_attributes[name]
 
     def get_local_attribute(self, name: str, time_step: int) -> AttributeValue:
         """
@@ -157,15 +123,8 @@ class TemporalNode(object):
         You could get it with a name and a time_step.
         """
         if not isinstance(name, str):
-            raise TypeError(f'type {str} for name expected')
-        if not isinstance(time_step, int):
-            raise TypeError(f'type {int} for time_step expected')
-        # TODO: Exception if time_step not exists
-        # TODO: Exception if attribute dont exists
-        if self.__local_attributes[name] != None and self.__local_attributes[name][time_step] != None:
-            return self.__local_attributes[name][time_step]
-        else:
-            raise IndexError(f'Name or time_step does not exist')
+            raise TypeError(f'type {str} for name expected, received type {type(name)}')
+        return self.__local_attributes[name][time_step]
 
     def update_global_attribute(self, name: str, value: AttributeValue):
         """
@@ -174,9 +133,7 @@ class TemporalNode(object):
         Otherwise the value with the given name is overridden.
         """
         if not isinstance(name, str):
-            raise TypeError(f'type {str} for name expected')
-        if not isinstance(value, (str, int)):
-            raise TypeError(f'type {str} or type {int} for value expected')
+            raise TypeError(f'type {str} for name expected, received type {type(name)}')
         self.__global_attributes[name] = value
 
     def update_local_attribute(self, name: str, values: typ.List[AttributeValue]):
@@ -187,13 +144,11 @@ class TemporalNode(object):
         In that list, the first element stands for the first timestep, the second for the second timestep and so on.
         """
         if not isinstance(name, str):
-            raise TypeError(f'type {str} for name expected')
-        if all(isinstance(item, (str,int)) for item in values):
-            self.__local_attributes[name] = values
-        else:
-            raise TypeError(f'elements of values list must be of type {str} or {int}')
-
-    # TODO: Should we add functions get_global_attributes and get_local_attributes?
+            raise TypeError(f'type {str} for name expected, received type {type(name)}')
+        if len(values) != self.__n_timesteps:
+            raise InvalidLocalAttributeValuesLength(f'expected values of length {self.__n_timesteps}, '
+                                                    f'received length {len(values)}')
+        self.__local_attributes[name] = values.copy()
 
 
 class Edge(object):
@@ -207,12 +162,11 @@ class Edge(object):
             time_stamps: List of timestamps in which the edge occurs in the specified timestep.
         """
         self.__time_stamps = time_stamps
-        self.__node1 = node1
-        self.__node2 = node2
+        self.__node1, self.__node2 = sorted((node1, node2))
 
     def get_incident_nodes(self) -> typ.Tuple[int, int]:
         """Get incident nodes of an edge in form of an tuple(node1, node2)"""
-        return (self.__node1, self.__node2)
+        return self.__node1, self.__node2
 
     def get_count(self) -> int:
         """Counts the occurences of an edge in the specified timestep"""
@@ -220,6 +174,8 @@ class Edge(object):
 
     def get_timestamps(self) -> typ.List[int]:
         """Returns list of timestamps for an edge in the specified timestep"""
-        return self.__time_stamps
+        return self.__time_stamps.copy()
 
-    # We may add edge measures in the future.
+
+class InvalidLocalAttributeValuesLength(Exception):
+    pass
