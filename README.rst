@@ -9,7 +9,9 @@ Install locally in current environment
 Unit Tests
 ----------
 Default unit tests:
+ 
  python setup.py test
 
 With coverage:
+ 
  python setup.py nosetests
