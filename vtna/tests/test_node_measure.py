@@ -137,7 +137,6 @@ class TestCentralityMeasures(unittest.TestCase):
                 else:
                     # Otherwise the measure must be 0
                     self.assertEqual(att_cent, 0)
-        i = 1 / 0
 
     def test_global_closeness_centrality(self):
         centrality = nome.GlobalClosenessCentrality(self._temp_graph)
