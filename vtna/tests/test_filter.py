@@ -13,4 +13,5 @@ class TestFilterCreation(unittest.TestCase):
             cls.temp_graph = graph.TemporalGraph(cls.edges, cls.meta, 20)
 
         def test_attribute_filter(self):
-            self.assertEqual(len(filter.filter_attributes(TestFilterCreation.temp_graph, '1','PC')), 3, 'Check number of node_ids for Attribute filter')
+            self.assertEqual(len(filter.filter_attributes(TestFilterCreation.temp_graph, '1','PC')), 3,
+                             'Number of node_ids for Attribute filter')
