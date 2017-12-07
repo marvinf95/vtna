@@ -57,16 +57,14 @@ class GlobalNodeMeasure(NodeMeasure, metaclass=abc.ABCMeta):
 def _add_local_edge_weights(nx_graph: nx.Graph, local_graph: vtna.graph.Graph):
     max_weight = max([edge.get_count() for edge in local_graph.get_edges()])
     for edge in local_graph.get_edges():
-        n1 = edge.get_incident_nodes()[0]
-        n2 = edge.get_incident_nodes()[1]
+        n1, n2 = edge.get_incident_nodes()
         nx_graph.edges[n1, n2]['weight'] = max_weight - edge.get_count()
 
 
-def _add_global_edge_weights(nx_graph: nx.Graph,
-                             local_graph: vtna.graph.TemporalGraph):
-    max_weight = max([e['count'] for e in nx_graph.edges()])
+def _add_global_edge_weights(nx_graph: nx.Graph):
+    max_weight = max([nx_graph.edges[e]['count'] for e in nx_graph.edges()])
     for edge in nx_graph.edges():
-        edge['weight'] = max_weight - edge['count']
+        nx_graph.edges[edge]['weight'] = max_weight - nx_graph.edges[edge]['count']
 
 
 # Implementations
@@ -96,6 +94,7 @@ class LocalDegreeCentrality(LocalNodeMeasure):
         return "Calculates node degree for every node"
 
     def add_to_graph(self):
+        super().add_to_graph()
         for node in self._temporal_graph.get_nodes():
             node.update_local_attribute(self.get_name(),
                                         self._dc_dict[
@@ -123,6 +122,7 @@ class GlobalDegreeCentrality(GlobalNodeMeasure):
                "local degrees"
 
     def add_to_graph(self):
+        super().add_to_graph()
         for node in self._temporal_graph.get_nodes():
             node.update_global_attribute(self.get_name(),
                                          self._dc_dict[node.get_id()])
@@ -166,9 +166,11 @@ class LocalBetweennessCentrality(LocalNodeMeasure):
                "node."
 
     def __getitem__(self, node_id: int) -> typ.List[float]:
+        super().__getitem__(node_id)
         return self._bc_dict[node_id]
 
     def add_to_graph(self):
+        super().add_to_graph()
         for (node_id, time_cent_list) in self._bc_dict.items():
             self._temporal_graph.get_node(node_id).update_local_attribute(
                 self.get_name(), time_cent_list)
@@ -181,7 +183,7 @@ class GlobalBetweennessCentrality(GlobalNodeMeasure):
         self._bc_dict: typ.Dict[NodeID, float]
 
         nx_graph = util.temporal_graph2networkx(self._temporal_graph)
-        _add_global_edge_weights(nx_graph, self._temporal_graph)
+        _add_global_edge_weights(nx_graph)
         # TODO: Should this be normalized? NetworkX default is True
         self._bc_dict = nx.betweenness_centrality(nx_graph, normalized=True,
                                                   weight='weight')
@@ -195,9 +197,11 @@ class GlobalBetweennessCentrality(GlobalNodeMeasure):
                "node."
 
     def __getitem__(self, node_id: int) -> float:
+        super().__getitem__(node_id)
         return self._bc_dict[node_id]
 
     def add_to_graph(self):
+        super().add_to_graph()
         for (node_id, bc) in self._bc_dict.items():
             self._temporal_graph.get_node(node_id).update_global_attribute(
                 self.get_name(), bc)
@@ -235,9 +239,11 @@ class LocalClosenessCentrality(LocalNodeMeasure):
                "graph through this node."
 
     def __getitem__(self, node_id: int) -> typ.List[float]:
+        super().__getitem__(node_id)
         return self._cc_dict[node_id]
 
     def add_to_graph(self):
+        super().add_to_graph()
         for (node_id, time_cent_list) in self._cc_dict.items():
             self._temporal_graph.get_node(node_id).update_local_attribute(
                 self.get_name(), time_cent_list)
@@ -250,7 +256,7 @@ class GlobalClosenessCentrality(GlobalNodeMeasure):
         self._bc_dict: typ.Dict[NodeID, float]
 
         nx_graph = util.temporal_graph2networkx(self._temporal_graph)
-        _add_global_edge_weights(nx_graph, self._temporal_graph)
+        _add_global_edge_weights(nx_graph)
         self._bc_dict = nx.closeness_centrality(nx_graph, distance='weight')
 
     def get_name(self) -> str:
@@ -262,9 +268,11 @@ class GlobalClosenessCentrality(GlobalNodeMeasure):
                "graph through this node."
 
     def __getitem__(self, node_id: int) -> float:
+        super().__getitem__(node_id)
         return self._bc_dict[node_id]
 
     def add_to_graph(self):
+        super().add_to_graph()
         for (node_id, bc) in self._bc_dict.items():
             self._temporal_graph.get_node(node_id).update_global_attribute(
                 self.get_name(), bc)
