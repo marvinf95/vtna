@@ -39,7 +39,7 @@ def description(d: str):
 @name('Flexible Spring Layout')
 @description('Basic Spring layout with one individual layout per time step')
 def flexible_spring_layout(temp_graph: vtna.graph.TemporalGraph) -> typ.List[typ.Dict[int, Point]]:
-    return [nx.spring_layout(util.graph2networkx(util.graph2networkx(graph)), dim=2, weight=None)
+    return [nx.spring_layout(util.graph2networkx(graph), dim=2, weight=None)
             for graph in temp_graph]
 
 
@@ -56,7 +56,7 @@ def static_spring_layout(temp_graph: vtna.graph.TemporalGraph) -> typ.List[typ.D
 @description('Weighted Spring layout with one individual layout per time step. Nodes with high number of interactions '
              'are closer.')
 def flexible_weighted_spring_layout(temp_graph: vtna.graph.TemporalGraph) -> typ.List[typ.Dict[int, Point]]:
-    return [nx.spring_layout(util.graph2networkx(util.graph2networkx(graph)), dim=2, weight='count')
+    return [nx.spring_layout(util.graph2networkx(graph), dim=2, weight='count')
             for graph in temp_graph]
 
 
