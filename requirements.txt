@@ -1,5 +1,5 @@
 coverage
-networkx
+networkx>=2.0
 nose
 numpy
-pandas
+pandas>=0.21.0
