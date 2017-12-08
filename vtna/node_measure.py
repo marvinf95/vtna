@@ -147,6 +147,9 @@ class LocalBetweennessCentrality(LocalNodeMeasure):
         # nodes missing in some local graphs
         timestep = 0
         for local_graph in self._temporal_graph:
+            # Skip empty graphs
+            if not local_graph.get_edges():
+                continue
             nx_graph = util.graph2networkx(local_graph)
             _add_local_edge_weights(nx_graph, local_graph)
             # TODO: Should this be normalized? NetworkX default is True
@@ -222,6 +225,9 @@ class LocalClosenessCentrality(LocalNodeMeasure):
         # nodes missing in some local graphs
         timestep = 0
         for local_graph in self._temporal_graph:
+            # Skip empty graphs
+            if not local_graph.get_edges():
+                continue
             nx_graph = util.graph2networkx(local_graph)
             _add_local_edge_weights(nx_graph, local_graph)
             for (node_id, cc) in nx.closeness_centrality(nx_graph,
