@@ -75,3 +75,14 @@ class TestFilterCreation(unittest.TestCase):
             self.assertEqual(results[0].get_id(), 3)
             self.assertEqual(results[1].get_id(), 42)
 
+        def test_node_filter_add_bad_type(self):
+            with self.assertRaises(TypeError):
+                vtna.filter.NodeFilter(lambda n: True) + 'false type'
+
+        def test_node_filter_multiply_bad_type(self):
+            with self.assertRaises(TypeError):
+                vtna.filter.NodeFilter(lambda n: True) * 'false type'
+
+        def test_node_filter_subtract_bad_type(self):
+            with self.assertRaises(TypeError):
+                vtna.filter.NodeFilter(lambda n: True) - 'false type'
