@@ -10,7 +10,7 @@ AttributeValue = typ.Union[str, float]
 
 
 class TemporalGraph(object):
-    def __init__(self, edge_table: dimp.TemporalEdgeTable, meta_table: dimp.MetadataTable, granularity: int):
+    def __init__(self, edges: typ.List[dimp.TemporalEdge], meta_table: dimp.MetadataTable, granularity: int):
         """
         Creates graphs for all timestamps with a given granularity.
 
@@ -23,13 +23,12 @@ class TemporalGraph(object):
         """
         self.__graphs = list()  # type: typ.List[Graph]
         self.__nodes = dict()  # type: typ.Dict[int, TemporalNode]
-        self.__interval_starts = list(range(edge_table.get_earliest_timestamp(),
-                                            edge_table.get_latest_timestamp(),
-                                            granularity))
+
+        buckets = dimp.group_edges_by_granularity(edges, granularity)
         # Create graphs
-        for timestep, begin in enumerate(self.__interval_starts):
+        for time_step, edges in enumerate(buckets):
             edge_timestamps = col.defaultdict(list)
-            for timestamp, node1, node2 in edge_table[begin:begin+granularity]:
+            for timestamp, node1, node2 in edges:
                 node1, node2 = sorted((node1, node2))
                 edge_timestamps[(node1, node2)].append(timestamp)
             edges = [Edge(edge[0], edge[1], timestamps) for edge, timestamps in edge_timestamps.items()]
@@ -37,18 +36,18 @@ class TemporalGraph(object):
         # Create nodes
         if meta_table is not None:
             for node_id, attributes in meta_table.items():
-                self.__nodes[node_id] = TemporalNode(node_id, attributes, len(self.__interval_starts))
+                self.__nodes[node_id] = TemporalNode(node_id, attributes, len(buckets))
         else:
             nodes = set()
             for g in self.__graphs:
                 for e in g.get_edges():
                     nodes.update(e.get_incident_nodes())
-            self.__nodes = dict((node_id, TemporalNode(node_id, dict(), len(self.__interval_starts)))
+            self.__nodes = dict((node_id, TemporalNode(node_id, dict(), len(buckets)))
                                 for node_id in nodes)
 
     def __getitem__(self, time_step: int) -> 'Graph':
         """Returns the graph at the specified timestep"""
-        if time_step < 0 or time_step >= len(self.__interval_starts):
+        if time_step < 0 or time_step >= len(self.__graphs):
             raise IndexError(f'Index {time_step} out of bounds')
         return self.__graphs[time_step]
 

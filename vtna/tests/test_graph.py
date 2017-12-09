@@ -5,14 +5,18 @@ import vtna.graph as graph
 
 
 class TestGraphCreation(unittest.TestCase):
+        temp_graph = None
+        edges = None
+        meta = None
+
         @classmethod
         def setUpClass(cls):
             cls.meta = dimp.MetadataTable('vtna/tests/data/highschool_meta.tsv')
-            cls.edges = dimp.TemporalEdgeTable('vtna/tests/data/highschool_edges.ssv')
+            cls.edges = dimp.read_edge_table('vtna/tests/data/highschool_edges.ssv')
             cls.temp_graph = graph.TemporalGraph(cls.edges, cls.meta, 20)
 
         def test_number_of_graphs(self):
-            self.assertEqual(len(TestGraphCreation.temp_graph), 12, 'created all graphs')
+            self.assertEqual(len(TestGraphCreation.temp_graph), 13, 'created all graphs')
 
         def test_iterator_of_graphs(self):
             third_graph = None
@@ -47,7 +51,7 @@ class TestGraphCreation(unittest.TestCase):
                              'Check get_global_attribute with overridden attribute')
 
         def test_local_attributes(self):
-            TestGraphCreation.temp_graph.get_node(871).update_local_attribute('1', [str(i) for i in range(12)])
+            TestGraphCreation.temp_graph.get_node(871).update_local_attribute('1', [str(i) for i in range(13)])
             self.assertEqual(TestGraphCreation.temp_graph.get_node(871).get_local_attribute('1', 0), '0',
                              'Check get_local_attribute with type string')
             self.assertEqual(TestGraphCreation.temp_graph.get_node(871).get_local_attribute('1', 2), '2',
@@ -55,7 +59,7 @@ class TestGraphCreation(unittest.TestCase):
 
         def test_with_higher_granularity(self):
             graphs_high_granularity = graph.TemporalGraph(TestGraphCreation.edges, TestGraphCreation.meta, 60)
-            self.assertEqual(len(graphs_high_granularity), 4, 'created all graphs')
+            self.assertEqual(len(graphs_high_granularity), 5, 'created all graphs')
             self.assertEqual(graphs_high_granularity[0].get_edge(122, 255).get_count(), 3, 'Check number of edge')
 
         def create_graph_without_metadata(self):
