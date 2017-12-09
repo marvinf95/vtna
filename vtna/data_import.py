@@ -45,7 +45,6 @@ def group_edges_by_granularity(edges: typ.List[TemporalEdge], granularity: int) 
         timestamp = edge[0]
         time_step = (timestamp - earliest) // granularity
         time_steps[time_step].append(edge)
-    print([len(bucket) for bucket in time_steps])
     return time_steps
 
 
