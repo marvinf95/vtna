@@ -1,101 +1,68 @@
-import warnings
-
-__all__ = ['TemporalEdgeTable', 'MetadataTable', 'BadOrderError']
-
+__all__ = ['read_edge_table', 'group_edges_by_granularity', 'get_time_interval_of_edges', 'infer_update_delta',
+           'MetadataTable', 'BadOrderError']
 
 import typing as typ
 
+import numpy as np
 import pandas
 import pandas.api.types
-import numpy as np
+
+TemporalEdge = typ.Tuple[int, int, int]
 
 
-class TemporalEdgeTable(object):
-    def __init__(self, graph_data_path: str, col_sep: str=None):
-        """
-        Loads table of edges indexed by timestamp from given path.
+def read_edge_table(graph_data_path: str, col_sep: str = None) -> typ.List[TemporalEdge]:
+    """
+    Loads edge table from given file path and returns as list of tuples (timestamp, node, node).
 
-        Args:
-            graph_data_path: Path to file of temporal graph data in the sociopatterns.org style.
-                File can be raw-text or compressed with .gz/.bz2/.zip/.xz.
-                File extension indicates the used compression.
-                URL as path can be used, if no authentication is required to access resource.
-            col_sep: Column separator. If not specified, any whitespace is recognized as separator.
-        Raises:
-            FileNotFoundError: Error occurs if the file path or URL is invalid.
-        """
-        if col_sep is None:
-            col_sep = r'\s+'
-        self.__table = pandas.read_csv(graph_data_path,
-                                       sep=col_sep,  # Split at any whitespace. Files are either space or tab separated.
-                                       header=None,
-                                       names=['timestamp', 'node1', 'node2'],
-                                       usecols=[0, 1, 2],  # Ignore extra columns.
-                                       dtype={'timestamp': np.int32, 'node1': np.int32, 'node2': np.int32}
-                                       )
-        timestamps = set(self.__table['timestamp'])
-        self.__update_delta = min(abs(t1 - t2) for t1 in timestamps for t2 in timestamps if t1 != t2)
-        self.__min_timestamp = self.__table['timestamp'].min()
-        self.__max_timestamp = self.__table['timestamp'].max()
+    Args:
+        graph_data_path: Path to file of temporal graph data in the sociopatterns.org style.
+            File can be raw-text or compressed with .gz/.bz2/.zip/.xz.
+            File extension indicates the used compression.
+            URL as path can be used, if no authentication is required to access resource.
+        col_sep: Column separator. If not specified, any whitespace is recognized as separator.
+    Raises:
+        FileNotFoundError: Error occurs if the file path or URL is invalid.
+    """
+    if col_sep is None:
+        col_sep = r'\s+'
+    table = pandas.read_csv(graph_data_path,
+                            sep=col_sep,  # Split at any whitespace. Files are either space or tab separated.
+                            header=None,
+                            names=['timestamp', 'node1', 'node2'],
+                            usecols=[0, 1, 2],  # Ignore extra columns.
+                            dtype={'timestamp': np.int32, 'node1': np.int32, 'node2': np.int32}
+                            )
+    return list(map(tuple, table.itertuples(index=False)))
 
-    def get_update_delta(self) -> int:
-        """Returns update delta, the minimal temporal distance between 2 observations."""
-        return self.__update_delta
 
-    def get_earliest_timestamp(self) -> int:
-        """Returns the earliest timestamp, therefore defines the lower bound of the observation time interval."""
-        return self.__min_timestamp
+def group_edges_by_granularity(edges: typ.List[TemporalEdge], granularity: int) -> typ.List[typ.List[TemporalEdge]]:
+    """Groups edges into buckets of width granularity"""
+    earliest, latest = get_time_interval_of_edges(edges)
+    n_time_steps = int((latest - earliest) / granularity) + 1
 
-    def get_latest_timestamp(self) -> int:
-        """Returns the latest timestamp, therefore defines the upper bound of the observation time interval."""
-        return self.__max_timestamp
+    time_steps = [list() for _ in range(n_time_steps)]
+    for edge in edges:
+        timestamp = edge[0]
+        time_step = (timestamp - earliest) // granularity
+        time_steps[time_step].append(edge)
+    return time_steps
 
-    def __getitem__(self, key: typ.Union[int, slice]) -> typ.Iterable[typ.Tuple[int, int, int]]:
-        """
-        Retrieves temporal edges based on single timestamp or time interval defined by slice.
 
-        Args:
-            key: Either an int or a slice. Slice can contain any combinations of int and None. Step is ignored in slice.
-        Returns:
-             An Iterable of tuples (timestamp, node1, node2), which are the temporal edges at the specified timestamp
-             or in the specified time interval.
-        Raises:
-            IndexError: Is raised, if index int is not in the observation interval as specified by
-                get_earliest_timestamp() and get_latest_timestamp().
-            TypeError: Is raised, if key is not an int, or if start or stop (of slice) are not int or None.
-        """
-        if isinstance(key, (int, np.integer)):
-            if not self.___is_in_time_interval(key):
-                raise IndexError(f'index {key} out of range ({self.__min_timestamp},'f'{self.__max_timestamp})')
-            df = self.__table[self.__table.timestamp == key][['timestamp', 'node1', 'node2']]
-        elif isinstance(key, slice):
-            start = key.start
-            stop = key.stop
-            # Step is not very useful to the given task and is therefore ignored
-            if key.step is not None:
-                warnings.warn(f'TemporalEdgeTable.__getitem__ ignores step attribute in slice', category=UserWarning)
-            # Ensure both start and stop are either None or int
-            if (start is not None and not isinstance(start, (int, np.integer))) or \
-                    (stop is not None and not isinstance(stop, (int, np.integer))):
-                raise TypeError('slice indices must be integers or None')
-            # If start or stop are None set them to min or max respectively
-            if start is None:
-                start = self.__min_timestamp
-            if stop is None:
-                # max + 1 because retrieval is exclusive on stop, this ensures inclusion of max
-                stop = self.__max_timestamp + 1
-            df = self.__table[(self.__table.timestamp >= start) & (self.__table.timestamp < stop)][
-                ['timestamp', 'node1', 'node2']]
-        else:
-            raise TypeError(f'indices must be integers or slices, not {type(key)}')
-        return ((timestamp, node1, node2) for timestamp, node1, node2 in df.itertuples(index=False))
+def get_time_interval_of_edges(edges: typ.List[TemporalEdge]) -> typ.Tuple[int, int]:
+    """Returns the earliest and latest timestamp of the given edges"""
+    timestamps = list(map(lambda e: e[0], edges))
+    return min(timestamps), max(timestamps)
 
-    def ___is_in_time_interval(self, timestamp: int) -> bool:
-        return self.__min_timestamp <= timestamp <= self.__max_timestamp
+
+def infer_update_delta(edges: typ.List[TemporalEdge]):
+    """Returns update delta, which is the smallest time difference between two edge observations"""
+    timestamps = sorted(set(map(lambda e: e[0], edges)))
+    update_delta = min(timestamps[i+1] - timestamps[i] for i in range(len(timestamps)-1))
+    return update_delta
 
 
 class MetadataTable(object):
-    def __init__(self, metadata_path: str, col_sep: str=None):
+    def __init__(self, metadata_path: str, col_sep: str = None):
         if col_sep is None:
             col_sep = r'\s+'
 
@@ -137,7 +104,7 @@ class MetadataTable(object):
             BadOrderError: Error is raised if provided ordered_categories does not match up with existing categories.
         """
         if set(ordered_categories) != set(self.__table[attribute].cat.categories) or \
-           len(ordered_categories) != len(self.__table[attribute].cat.categories):
+                len(ordered_categories) != len(self.__table[attribute].cat.categories):
             raise BadOrderError(ordered_categories, self.__table[attribute].cat.categories, attribute)
         self.__table[attribute].cat.reorder_categories(ordered_categories, ordered=True, inplace=True)
 
