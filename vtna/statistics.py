@@ -1,4 +1,42 @@
+import collections
+import typing as typ
+
 import vtna.graph
+
+
+def total_edges_per_time_step(temp_graph: vtna.graph.TemporalGraph) -> typ.List[int]:
+    return [sum(edge.get_count() for edge in graph.get_edges()) for graph in temp_graph]
+
+
+def nodes_per_time_step(temp_graph: vtna.graph.TemporalGraph) -> typ.List[int]:
+    return [len(set(node for edge in graph.get_edges() for node in edge.get_incident_nodes())) for graph in temp_graph]
+
+
+def multi_step_interactions(temp_graph: vtna.graph.TemporalGraph, update_delta: int) \
+        -> typ.Dict[typ.Tuple[int, int], typ.List[typ.Tuple[int, int]]]:
+    """
+    Args:
+        temp_graph: vtna.graph.TemporalGraph.
+        update_delta: int, smallest time distance between two observations.
+    Returns:
+        Dictionary, which maps edge to list of time intervals. Each time interval represents a continuous
+           series of edges between two nodes. Intuitively, such a series of edges implies a ongoing conversation
+           between nodes.
+    """
+    timestamps = collections.defaultdict(list)
+    for graph in temp_graph:
+        for edge in graph.get_edges():
+            node1, node2 = sorted(edge.get_incident_nodes())
+            timestamps[(node1, node2)].extend(edge.get_timestamps())
+    interactions = dict()
+    for edge in timestamps.keys():
+        interactions[edge] = [(timestamps[edge][0], timestamps[edge][0])]
+        for timestamp in timestamps[1:]:
+            if interactions[edge][-1][1] == (timestamp - update_delta):
+                interactions[edge][-1][1] = timestamp
+            else:
+                interactions[edge].append((timestamp, timestamp))
+    return interactions
 
 
 def name(n: str):
