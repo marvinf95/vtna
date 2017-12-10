@@ -1,6 +1,8 @@
 import collections
 import typing as typ
 
+import numpy as np
+
 import vtna.graph
 
 
@@ -37,6 +39,28 @@ def multi_step_interactions(temp_graph: vtna.graph.TemporalGraph, update_delta: 
             else:
                 interactions[edge].append((timestamp, timestamp))
     return interactions
+
+
+def mean_stdev_numeric_attribute(temp_graph: vtna.graph.TemporalGraph, attribute_name: str) -> typ.Tuple[float, float]:
+    values = [node.get_global_attribute(attribute_name) for node in temp_graph.get_nodes()]
+    return float(np.mean(values)), float(np.std(values))
+
+
+def median_ordinal_attribute(temp_graph: vtna.graph.TemporalGraph, attribute_name: str, order: typ.List[str]) -> str:
+    cat2idx = dict((cat, idx) for idx, cat in enumerate(order))
+    median = np.median([cat2idx[node.get_global_attribute(attribute_name)] for node in temp_graph.get_nodes()])
+    return order[int(median)]
+
+
+def mode_categorical_attribute(temp_graph: vtna.graph.TemporalGraph, attribute_name: str) -> str:
+    values = [node.get_global_attribute(attribute_name) for node in temp_graph.get_nodes()]
+    return max(set(values), key=values.count)
+
+
+def histogram_categorical_attribute(temp_graph: vtna.graph.TemporalGraph, attribute_name: str) -> typ.Dict[str, int]:
+    hist = collections.Counter()
+    hist.update(node.get_global_attribute(attribute_name) for node in temp_graph.get_nodes())
+    return hist
 
 
 def name(n: str):
