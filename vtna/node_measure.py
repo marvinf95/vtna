@@ -30,7 +30,7 @@ class NodeMeasure(util.Describable, metaclass=abc.ABCMeta):
 
     @abc.abstractmethod
     def __getitem__(self, node_id: int):
-        if not isinstance(node, (int, np.integer)):
+        if not isinstance(node_id, (int, np.integer)):
             raise TypeError(
                 f'type {int} expected, received type {type(node_id)}')
 
