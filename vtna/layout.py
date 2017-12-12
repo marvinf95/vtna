@@ -109,4 +109,4 @@ def static_weighted_spring_layout(temp_graph: vtna.graph.TemporalGraph,
 
 
 def __default_node_distance(graph: nx.Graph) -> float:
-    return 1.0/np.sqrt(len(graph.nodes()))
+    return 1.0/np.sqrt(len(graph.nodes())+1)
