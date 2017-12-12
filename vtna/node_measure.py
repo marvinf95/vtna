@@ -18,7 +18,7 @@ Timestep = int
 class NodeMeasure(util.Describable, metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def __init__(self, graph: vtna.graph.TemporalGraph):
-        if type(graph) != vtna.graph.TemporalGraph:
+        if not isinstance(graph, vtna.graph.TemporalGraph):
             raise TypeError(
                 f'type {vtna.graph.TemporalGraph} expected, received type ' \
                 f'{type(graph)}')
@@ -30,7 +30,7 @@ class NodeMeasure(util.Describable, metaclass=abc.ABCMeta):
 
     @abc.abstractmethod
     def __getitem__(self, node_id: int):
-        if type(node_id) != int:
+        if not isinstance(node, (int, np.integer)):
             raise TypeError(
                 f'type {int} expected, received type {type(node_id)}')
 
