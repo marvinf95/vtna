@@ -64,10 +64,15 @@ def description(d: str):
 def flexible_spring_layout(temp_graph: vtna.graph.TemporalGraph,
                            node_distance_scale: float=1.0,
                            n_iterations: int=50) -> typ.List[typ.Dict[int, Point]]:
-    graphs = [util.graph2networkx(graph) for graph in temp_graph]
-    node_distances = [node_distance_scale * __default_node_distance(graph) for graph in graphs]
-    return [nx.spring_layout(graphs[i], dim=2, weight=None, iterations=n_iterations, k=node_distances[i])
-            for i in range(len(graphs))]
+    layouts = list()
+    for graph in map(util.graph2networkx, temp_graph):
+        if len(graph.nodes()) == 0:
+            layout = dict()
+        else:
+            node_distance = node_distance_scale * __default_node_distance(graph)
+            layout = nx.spring_layout(graph, dim=2, weight=None, iterations=n_iterations, k=node_distance)
+        layouts.append(layout)
+    return layouts
 
 
 @is_static(True)
@@ -89,10 +94,15 @@ def static_spring_layout(temp_graph: vtna.graph.TemporalGraph,
 def flexible_weighted_spring_layout(temp_graph: vtna.graph.TemporalGraph,
                                     node_distance_scale: float=1.0,
                                     n_iterations: int=50) -> typ.List[typ.Dict[int, Point]]:
-    graphs = [util.graph2networkx(graph) for graph in temp_graph]
-    node_distances = [node_distance_scale * __default_node_distance(graph) for graph in graphs]
-    return [nx.spring_layout(graphs[i], dim=2, weight='count', iterations=n_iterations, k=node_distances[i])
-            for i in range(len(graphs))]
+    layouts = list()
+    for graph in map(util.graph2networkx, temp_graph):
+        if len(graph.nodes()) == 0:
+            layout = dict()
+        else:
+            node_distance = node_distance_scale * __default_node_distance(graph)
+            layout = nx.spring_layout(graph, dim=2, weight='count', iterations=n_iterations, k=node_distance)
+        layouts.append(layout)
+    return layouts
 
 
 @is_static(True)
