@@ -144,7 +144,6 @@ class LocalBetweennessCentrality(LocalNodeMeasure):
             nx_graph = util.graph2networkx(local_graph)
             _add_local_edge_weights(nx_graph, local_graph)
             # TODO: Should this be normalized? NetworkX default is True
-            # TODO: Fix weight='weight' to either weight='count' or weight=None
             for (node_id, bc) in nx.betweenness_centrality(nx_graph, normalized=True, weight='weight').items():
                 self._bc_dict[node_id][timestep] = bc
             timestep += 1
@@ -177,7 +176,6 @@ class GlobalBetweennessCentrality(GlobalNodeMeasure):
         nx_graph = util.temporal_graph2networkx(self._temporal_graph)
         _add_global_edge_weights(nx_graph)
         # TODO: Should this be normalized? NetworkX default is True
-        # TODO: Fix weight='weight' to either weight='count' or weight=None
         self._bc_dict = nx.betweenness_centrality(nx_graph, normalized=True, weight='weight')
 
     def get_name(self) -> str:
@@ -219,7 +217,6 @@ class LocalClosenessCentrality(LocalNodeMeasure):
                 continue
             nx_graph = util.graph2networkx(local_graph)
             _add_local_edge_weights(nx_graph, local_graph)
-            # TODO: Fix weight='weight' to either weight='count' or weight=None
             for (node_id, cc) in nx.closeness_centrality(nx_graph, distance='weight').items():
                 self._cc_dict[node_id][timestep] = cc
             timestep += 1
@@ -251,7 +248,6 @@ class GlobalClosenessCentrality(GlobalNodeMeasure):
 
         nx_graph = util.temporal_graph2networkx(self._temporal_graph)
         _add_global_edge_weights(nx_graph)
-        # TODO: Fix weight='weight' to either weight='count' or weight=None
         self._cc_dict = nx.closeness_centrality(nx_graph, distance='weight')
 
     def get_name(self) -> str:
