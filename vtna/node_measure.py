@@ -9,6 +9,7 @@ import vtna.graph
 import vtna.utility as util
 
 import networkx as nx
+import numpy as np
 
 # Type aliases
 NodeID = int
@@ -18,10 +19,9 @@ Timestep = int
 class NodeMeasure(util.Describable, metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def __init__(self, graph: vtna.graph.TemporalGraph):
-        if type(graph) != vtna.graph.TemporalGraph:
+        if not isinstance(graph, vtna.graph.TemporalGraph):
             raise TypeError(
-                f'type {vtna.graph.TemporalGraph} expected, received type ' \
-                f'{type(graph)}')
+                f'type {vtna.graph.TemporalGraph} expected, received type {type(graph)}')
 
     @abc.abstractmethod
     def add_to_graph(self):
@@ -30,14 +30,9 @@ class NodeMeasure(util.Describable, metaclass=abc.ABCMeta):
 
     @abc.abstractmethod
     def __getitem__(self, node_id: int):
-        if type(node_id) != int:
+        if not isinstance(node_id, (int, np.integer)):
             raise TypeError(
                 f'type {int} expected, received type {type(node_id)}')
-
-
-# Other than computation, most functionality can be implemented in the
-# abstract classes LocalNodeMeasure
-# and GlobalNodeMeasure
 
 
 class LocalNodeMeasure(NodeMeasure, metaclass=abc.ABCMeta):
@@ -64,11 +59,7 @@ def _add_local_edge_weights(nx_graph: nx.Graph, local_graph: vtna.graph.Graph):
 def _add_global_edge_weights(nx_graph: nx.Graph):
     max_weight = max([nx_graph.edges[e]['count'] for e in nx_graph.edges()])
     for edge in nx_graph.edges():
-        nx_graph.edges[edge]['weight'] = max_weight - \
-                                         nx_graph.edges[edge]['count'] + 1
-
-
-# Implementations
+        nx_graph.edges[edge]['weight'] = max_weight - nx_graph.edges[edge]['count'] + 1
 
 
 class LocalDegreeCentrality(LocalNodeMeasure):
@@ -153,10 +144,7 @@ class LocalBetweennessCentrality(LocalNodeMeasure):
             nx_graph = util.graph2networkx(local_graph)
             _add_local_edge_weights(nx_graph, local_graph)
             # TODO: Should this be normalized? NetworkX default is True
-            for (node_id, bc) in nx.betweenness_centrality(nx_graph,
-                                                           normalized=True,
-                                                           weight='weight'
-                                                           ).items():
+            for (node_id, bc) in nx.betweenness_centrality(nx_graph, normalized=True, weight='weight').items():
                 self._bc_dict[node_id][timestep] = bc
             timestep += 1
 
@@ -188,8 +176,7 @@ class GlobalBetweennessCentrality(GlobalNodeMeasure):
         nx_graph = util.temporal_graph2networkx(self._temporal_graph)
         _add_global_edge_weights(nx_graph)
         # TODO: Should this be normalized? NetworkX default is True
-        self._bc_dict = nx.betweenness_centrality(nx_graph, normalized=True,
-                                                  weight='weight')
+        self._bc_dict = nx.betweenness_centrality(nx_graph, normalized=True, weight='weight')
 
     def get_name(self) -> str:
         return "Global Betweenness Centrality"
@@ -220,7 +207,7 @@ class LocalClosenessCentrality(LocalNodeMeasure):
         # exists in every local graph
         for node in self._temporal_graph.get_nodes():
             if node.get_id() not in self._cc_dict:
-                self._cc_dict[node.get_id()] = len(self._temporal_graph) * [0]
+                self._cc_dict[node.get_id()] = [0 for _ in range(len(self._temporal_graph))]
         # We also have to use an index because appending won't work with
         # nodes missing in some local graphs
         timestep = 0
@@ -230,9 +217,7 @@ class LocalClosenessCentrality(LocalNodeMeasure):
                 continue
             nx_graph = util.graph2networkx(local_graph)
             _add_local_edge_weights(nx_graph, local_graph)
-            for (node_id, cc) in nx.closeness_centrality(nx_graph,
-                                                         distance='weight'
-                                                         ).items():
+            for (node_id, cc) in nx.closeness_centrality(nx_graph, distance='weight').items():
                 self._cc_dict[node_id][timestep] = cc
             timestep += 1
 

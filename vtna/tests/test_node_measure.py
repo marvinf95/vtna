@@ -2,6 +2,7 @@ import unittest
 
 from nose.tools import raises
 from numbers import Number
+import numpy as np
 
 import vtna.node_measure as nome
 import vtna.data_import as dimp
@@ -153,15 +154,15 @@ class TestCentralityMeasures(unittest.TestCase):
 
     @raises(TypeError)
     def test_lbc_getitem_invalid_parameter(self):
-        nome.LocalDegreeCentrality(self._temp_graph).__getitem__(
-            "NotAnInteger")
+        nome.LocalDegreeCentrality(self._temp_graph).__getitem__("NotAnInteger")
 
     @raises(TypeError)
     def test_gcc_getitem_invalid_parameter(self):
-        nome.GlobalClosenessCentrality(self._temp_graph).__getitem__(
-            "NotAnInteger")
+        nome.GlobalClosenessCentrality(self._temp_graph).__getitem__("NotAnInteger")
 
     @raises(TypeError)
     def test_lbc_init_invalid_parameter(self):
-        nome.LocalDegreeCentrality(self._temp_graph).__init__(
-            "NotATemporalGraph")
+        nome.LocalDegreeCentrality(self._temp_graph).__init__("NotATemporalGraph")
+
+    def test_getitem_with_numpy_integer(self):
+        nome.LocalDegreeCentrality(self._temp_graph).__getitem__(np.int32(185))
