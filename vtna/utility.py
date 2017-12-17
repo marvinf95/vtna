@@ -18,7 +18,8 @@ class Describable(metaclass=abc.ABCMeta):
 
 def graph2networkx(graph: vtna.graph.Graph) -> networkx.Graph:
     nx_graph = networkx.Graph()
-    nx_graph.add_edges_from(edge.get_incident_nodes() + ({'count': edge.get_count()},) for edge in graph.get_edges())
+    nx_graph.add_edges_from(tuple(sorted(edge.get_incident_nodes())) + ({'count': edge.get_count()},)
+                            for edge in graph.get_edges())
     return nx_graph
 
 
