@@ -30,7 +30,7 @@ def read_edge_table(graph_data_path: str, col_sep: str = None) -> typ.List[Tempo
                             header=None,
                             names=['timestamp', 'node1', 'node2'],
                             usecols=[0, 1, 2],  # Ignore extra columns.
-                            dtype={'timestamp': np.int32, 'node1': np.int32, 'node2': np.int32}
+                            dtype={'timestamp': np.int, 'node1': np.int, 'node2': np.int}
                             )
     return list(map(tuple, table.itertuples(index=False)))
 
@@ -69,7 +69,7 @@ class MetadataTable(object):
         self.__table = pandas.read_csv(metadata_path,
                                        sep=col_sep,
                                        header=None,
-                                       dtype={0: np.int32}
+                                       dtype={0: np.int}
                                        )
         self.__table.rename({0: 'node'}, axis=1, inplace=True)
         self.__table.set_index('node', inplace=True)  # use node as index

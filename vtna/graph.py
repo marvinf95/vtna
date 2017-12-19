@@ -15,11 +15,10 @@ class TemporalGraph(object):
         Creates graphs for all timestamps with a given granularity.
 
         Args:
-            edge_table: Its a table with three columns.
-                        The first one specifies a timestamp.
-                        And the second and third one specifies the nodes that are interacting at this timestamp.
-            meta_table: Its a table with attributes for nodes.
-            granularity: Granularity defines the timesteps, for which the different graphs will be created.
+            edges: List of temporal edges. Each edge is a triple (timestamp, node, node).
+            meta_table: MetadataTable with static node attributes.
+            granularity: Granularity defines the size of time intervals, which will be considered as time steps.
+                Each time step has an associated aggregated graph containing all edges occurring in the time interval.
         """
         self.__graphs = list()  # type: typ.List[Graph]
         self.__nodes = dict()  # type: typ.Dict[int, TemporalNode]
