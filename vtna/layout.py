@@ -82,8 +82,11 @@ def static_spring_layout(temp_graph: vtna.graph.TemporalGraph,
                          node_distance_scale: float=1.0,
                          n_iterations: int=50) -> typ.List[typ.Dict[int, Point]]:
     graph = util.temporal_graph2networkx(temp_graph)
-    node_distance = node_distance_scale * __default_node_distance(graph)
-    layout = nx.spring_layout(graph, dim=2, weight=None, k=node_distance, iterations=n_iterations)
+    if (len(graph.nodes())) == 0:
+        layout = dict()
+    else:
+        node_distance = node_distance_scale * __default_node_distance(graph)
+        layout = nx.spring_layout(graph, dim=2, weight=None, k=node_distance, iterations=n_iterations)
     return [layout.copy() for _ in range(len(temp_graph))]
 
 
@@ -113,8 +116,11 @@ def static_weighted_spring_layout(temp_graph: vtna.graph.TemporalGraph,
                                   node_distance_scale: float=1.0,
                                   n_iterations: int=50) -> typ.List[typ.Dict[int, Point]]:
     graph = util.temporal_graph2networkx(temp_graph)
-    node_distance = node_distance_scale * __default_node_distance(graph)
-    layout = nx.spring_layout(graph, dim=2, weight='count', k=node_distance, iterations=n_iterations)
+    if (len(graph.nodes())) == 0:
+        layout = dict()
+    else:
+        node_distance = node_distance_scale * __default_node_distance(graph)
+        layout = nx.spring_layout(graph, dim=2, weight='count', k=node_distance, iterations=n_iterations)
     return [layout.copy() for _ in range(len(temp_graph))]
 
 
