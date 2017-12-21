@@ -26,6 +26,10 @@ import typing as typ
 
 import networkx as nx
 import numpy as np
+import scipy as sp
+import scipy.spatial
+import sklearn.decomposition as decomposition
+import sklearn.preprocessing as preprocessing
 
 import vtna.graph
 import vtna.utility as util
@@ -122,6 +126,51 @@ def static_weighted_spring_layout(temp_graph: vtna.graph.TemporalGraph,
         node_distance = node_distance_scale * __default_node_distance(graph)
         layout = nx.spring_layout(graph, dim=2, weight='count', k=node_distance, iterations=n_iterations)
     return [layout.copy() for _ in range(len(temp_graph))]
+
+
+@is_static(True)
+@name('Random Walk PCA Layout with Repel')
+@description('Random Walk PCA uses the similarity of random walks from each node in the graph to build a '
+             '2d representation of nodes via PCA. With an iterative repel mechanism overlapping nodes are separated.')
+def random_walk_pca_layout(temp_graph: vtna.graph.TemporalGraph, n: int=25, repel: float=1.0, p: int=2,
+                           random_state: int=None) -> typ.List[typ.Dict[int, Point]]:
+    # TODO: Documentation
+    # TODO: Optimize via vectorization
+    # Mappings: node ID -> index, index -> node ID
+    idx2node = [node.get_id() for node in temp_graph.get_nodes()]
+    node2idx = dict((node_id, idx) for idx, node_id in enumerate(idx2node))
+    # Build adjacency matrix
+    nxgraph = util.temporal_graph2networkx(temp_graph)
+    n_nodes = len(nxgraph.nodes())
+    adjacency_matrix = np.zeros(shape=(n_nodes, n_nodes), dtype=np.float)
+    for n1, n2, data in nxgraph.edges(data=True):
+        adjacency_matrix[node2idx[n1], node2idx[n2]] = data['count']
+        adjacency_matrix[node2idx[n2], node2idx[n1]] = data['count']
+    # Compute random walk probabilities
+    adj_prob =  adjacency_matrix / np.sum(adjacency_matrix, axis=0)
+    walks = np.linalg.matrix_power(adj_prob, n).T
+    # Compute distances between random walks of each node
+    walk_dist = np.zeros(shape=adjacency_matrix.shape, dtype=np.float)
+    for row in range(walk_dist.shape[0]):
+        for col in range(walk_dist.shape[1]):
+            walk_dist[row, col] = sp.spatial.distance.minkowski(walks[row], walks[col], p=p)
+    # Compute PCA on random walk distances
+    walks_dist_x = preprocessing.scale(walk_dist)
+    pca = decomposition.PCA(n_components=2, random_state=random_state)
+    walks_dist_2d = pca.fit_transform(walks_dist_x)
+    # Apply repel on each node iteratively
+    for n1 in range(walks_dist_2d.shape[0]):
+        for n2 in range(walks_dist_2d.shape[0]):
+            if n1 == n2:
+                continue
+            dist = sp.spatial.distance.minkowski(walks_dist_2d[n1], walks_dist_2d[n2], p=p)
+            walks_dist_2d[n2] = walks_dist_2d[n2] + (repel/dist) * (walks_dist_2d[n2] - walks_dist_2d[n1])
+    # Build layout dict from layout matrix
+    layout = dict()
+    for i in range(walks_dist_2d.shape[0]):
+        layout[idx2node[i]] = (walks_dist_2d[i, 0], walks_dist_2d[i, 1])
+    layouts = [layout.copy() for _ in range(len(temp_graph))]
+    return layouts
 
 
 def __default_node_distance(graph: nx.Graph) -> float:
