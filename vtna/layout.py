@@ -135,7 +135,7 @@ def static_weighted_spring_layout(temp_graph: vtna.graph.TemporalGraph,
 def random_walk_pca_layout(temp_graph: vtna.graph.TemporalGraph, n: int=25, repel: float=1.0, p: int=2,
                            random_state: int=None) -> typ.List[typ.Dict[int, Point]]:
     # TODO: Documentation
-    # TODO: Optimize via vectorization
+    # TODO: Map points to -1, 1 interval.
     # Mappings: node ID -> index, index -> node ID
     idx2node = [node.get_id() for node in temp_graph.get_nodes()]
     node2idx = dict((node_id, idx) for idx, node_id in enumerate(idx2node))
@@ -147,28 +147,31 @@ def random_walk_pca_layout(temp_graph: vtna.graph.TemporalGraph, n: int=25, repe
         adjacency_matrix[node2idx[n1], node2idx[n2]] = data['count']
         adjacency_matrix[node2idx[n2], node2idx[n1]] = data['count']
     # Compute random walk probabilities
-    adj_prob =  adjacency_matrix / np.sum(adjacency_matrix, axis=0)
+    adj_prob = adjacency_matrix / np.sum(adjacency_matrix, axis=0)
     walks = np.linalg.matrix_power(adj_prob, n).T
     # Compute distances between random walks of each node
-    walk_dist = np.zeros(shape=adjacency_matrix.shape, dtype=np.float)
-    for row in range(walk_dist.shape[0]):
-        for col in range(walk_dist.shape[1]):
-            walk_dist[row, col] = sp.spatial.distance.minkowski(walks[row], walks[col], p=p)
+    walk_dist = sp.spatial.distance.squareform(sp.spatial.distance.pdist(walks, metric='minkowski', p=p))
     # Compute PCA on random walk distances
     walks_dist_x = preprocessing.scale(walk_dist)
     pca = decomposition.PCA(n_components=2, random_state=random_state)
     walks_dist_2d = pca.fit_transform(walks_dist_x)
     # Apply repel on each node iteratively
-    for n1 in range(walks_dist_2d.shape[0]):
-        for n2 in range(walks_dist_2d.shape[0]):
-            if n1 == n2:
-                continue
-            dist = sp.spatial.distance.minkowski(walks_dist_2d[n1], walks_dist_2d[n2], p=p)
-            walks_dist_2d[n2] = walks_dist_2d[n2] + (repel/dist) * (walks_dist_2d[n2] - walks_dist_2d[n1])
+    # Iterate over each point once (current point is called idx)
+    for idx in range(walks_dist_2d.shape[0]):
+        # Distance between each point and idx
+        dist_to_n1 = sp.spatial.distance.squareform(
+            sp.spatial.distance.pdist(walks_dist_2d, metric='minkowski', p=p)
+        )[idx]
+        # Difference between each point and idx
+        diff_from_n1 = walks_dist_2d - np.tile(walks_dist_2d[idx], (walks_dist_2d.shape[0], 1))
+        # Repel effect is the inverse of the distance between each point and idx times the input repel factor.
+        repel_effect = np.divide(repel, dist_to_n1, where=dist_to_n1 != 0)
+        # Add the repel_effect times difference to each point.
+        walks_dist_2d = walks_dist_2d + (repel_effect * diff_from_n1.T).T
     # Build layout dict from layout matrix
     layout = dict()
     for i in range(walks_dist_2d.shape[0]):
-        layout[idx2node[i]] = (walks_dist_2d[i, 0], walks_dist_2d[i, 1])
+        layout[idx2node[i]] = tuple(walks_dist_2d[i].tolist())
     layouts = [layout.copy() for _ in range(len(temp_graph))]
     return layouts
 
