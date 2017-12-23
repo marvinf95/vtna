@@ -50,12 +50,16 @@ def group_edges_by_granularity(edges: typ.List[TemporalEdge], granularity: int) 
 
 def get_time_interval_of_edges(edges: typ.List[TemporalEdge]) -> typ.Tuple[int, int]:
     """Returns the earliest and latest timestamp of the given edges"""
+    if len(edges) == 0:
+        raise ValueError('edges cannot be an empty list')
     timestamps = list(map(lambda e: e[0], edges))
     return min(timestamps), max(timestamps)
 
 
 def infer_update_delta(edges: typ.List[TemporalEdge]):
     """Returns update delta, which is the smallest time difference between two edge observations"""
+    if len(edges) == 0:
+        raise ValueError('edges cannot be an empty list')
     timestamps = sorted(set(map(lambda e: e[0], edges)))
     update_delta = min(timestamps[i+1] - timestamps[i] for i in range(len(timestamps)-1))
     return update_delta
