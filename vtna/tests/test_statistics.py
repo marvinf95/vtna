@@ -8,6 +8,7 @@ import vtna.statistics as stats
 
 class TestGraphRelatedStatistics(unittest.TestCase):
         graphs = None
+        edges = None
         update_delta = 20
         granularity = 40
 
@@ -33,6 +34,7 @@ class TestGraphRelatedStatistics(unittest.TestCase):
                     vtna.graph.Edge(6, 8, [100])
                 ])
             ]
+            cls.edges = [[20, 1, 2], [40, 1, 2], [20, 2, 3], [60, 1, 2], [60, 2, 3], [80, 6, 8], [100, 6, 8]]
 
         def test_total_edges_per_time_step_with_empty_iterable(self):
             self.assertEqual(stats.total_edges_per_time_step([]), [])
@@ -56,6 +58,13 @@ class TestGraphRelatedStatistics(unittest.TestCase):
             self.assertEqual(interactions[(2, 3)], [(20, 20), (60, 60)])
             self.assertEqual(interactions[(6, 8)], [(80, 100)])
             self.assertEqual(len(interactions.keys()), 3)
+
+        def test_histogram_edges_with_empty_list(self):
+            self.assertEqual(stats.histogram_edges([]), [])
+
+        def test_histogram_edges_with_toy_examples(self):
+            print('test')
+            self.assertEqual(stats.histogram_edges(TestGraphRelatedStatistics.edges), [2, 1, 2, 1, 1])
 
 
 class TestAttributeRelatedStatistics(unittest.TestCase):

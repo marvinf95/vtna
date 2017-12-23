@@ -3,6 +3,7 @@ import typing as typ
 
 import numpy as np
 
+import vtna.data_import
 import vtna.graph
 
 
@@ -12,6 +13,16 @@ TimeInterval = typ.Tuple[int, int]
 
 def total_edges_per_time_step(graphs: typ.Iterable[vtna.graph.Graph]) -> typ.List[int]:
     return [sum(edge.get_count() for edge in graph.get_edges()) for graph in graphs]
+
+
+def histogram_edges(edges: typ.List[typ.Tuple[int, int, int]]) -> typ.List[int]:
+    if len(edges) == 0:
+        return list()
+    update_delta = vtna.data_import.infer_update_delta(edges)
+    earliest, latest = vtna.data_import.get_time_interval_of_edges(edges)
+    histogram = [sum(1 for timestamp, _, _ in edges if timestamp == current_time)
+                 for current_time in range(earliest, latest+update_delta, update_delta)]
+    return histogram
 
 
 def nodes_per_time_step(graphs: typ.Iterable[vtna.graph.Graph]) -> typ.List[int]:
