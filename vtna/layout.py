@@ -168,6 +168,10 @@ def random_walk_pca_layout(temp_graph: vtna.graph.TemporalGraph, n: int=25, repe
         repel_effect = np.divide(repel, dist_to_n1, where=dist_to_n1 != 0)
         # Add the repel_effect times difference to each point.
         walks_dist_2d = walks_dist_2d + (repel_effect * diff_from_n1.T).T
+    # Scale each x and y to range [-1,1]
+    max_2d = np.max(walks_dist_2d, axis=0)
+    min_2d = np.min(walks_dist_2d, axis=0)
+    walks_dist_2d = np.array([2, 2]) / (max_2d - min_2d) * (walks_dist_2d - max_2d) + np.array([1, 1])
     # Build layout dict from layout matrix
     layout = dict()
     for i in range(walks_dist_2d.shape[0]):
