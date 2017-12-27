@@ -63,8 +63,11 @@ class TestGraphRelatedStatistics(unittest.TestCase):
             self.assertEqual(stats.histogram_edges([]), [])
 
         def test_histogram_edges_with_toy_examples(self):
-            print('test')
             self.assertEqual(stats.histogram_edges(TestGraphRelatedStatistics.edges), [2, 1, 2, 1, 1])
+
+        def test_histogram_edges_with_toy_examples_and_non_default_granularity(self):
+            self.assertEqual(stats.histogram_edges(TestGraphRelatedStatistics.edges,
+                                                   TestGraphRelatedStatistics.granularity), [3, 3, 1])
 
 
 class TestAttributeRelatedStatistics(unittest.TestCase):
