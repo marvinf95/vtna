@@ -66,12 +66,14 @@ class TestMetadataTableFunctionality(unittest.TestCase):
 
     def test_get_attribute_names(self):
         names = TestMetadataTableFunctionality.meta.get_attribute_names()
-        self.assertEqual(names, {'1', '2'}, 'names are initially "1" and "2"')
+        self.assertEqual(set(names), {'1', '2'}, 'names are initially "1" and "2"')
 
     def test_rename_attribute_names(self):
         meta = dimp.MetadataTable('vtna/tests/data/highschool_meta.tsv')
         meta.rename_attributes({'1': 'class', '2': 'gender'})
-        self.assertEqual(meta.get_attribute_names(), {'class', 'gender'})
+        self.assertEqual(set(meta.get_attribute_names()), {'class', 'gender'})
+
+    # TODO: Test exception cases of rename
 
     def test_get_categories(self):
         cat2 = TestMetadataTableFunctionality.meta.get_categories('2')

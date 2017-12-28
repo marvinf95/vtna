@@ -1,6 +1,7 @@
 __all__ = ['read_edge_table', 'group_edges_by_granularity', 'get_time_interval_of_edges', 'infer_update_delta',
            'MetadataTable', 'BadOrderError']
 
+import collections
 import typing as typ
 
 import numpy as np
@@ -82,10 +83,20 @@ class MetadataTable(object):
         for col_name in self.__table.columns.values:
             self.__table[col_name] = self.__table[col_name].astype('category')
 
-    def get_attribute_names(self) -> typ.Set[str]:
-        return set(self.__table.columns.values).difference({'node'})
+    def get_attribute_names(self) -> typ.List[str]:
+        return [name for name in self.__table.columns.values if name != 'node']
 
     def rename_attributes(self, names: typ.Dict[str, str]):
+        # Throw an exception if try to rename same name to multiple columns
+        target_name_counter = collections.Counter()
+        target_name_counter.update(names.values())
+        duplicate_names = set(n for n, c in target_name_counter.items() if c > 1)
+        if len(duplicate_names) > 0:
+            raise DuplicateTargetNamesError(duplicate_names)
+        # Throw an exception if try to rename to something which exists
+        illegal_names = set(names.values()).intersection(self.get_attribute_names())
+        if len(illegal_names) > 0:
+            raise RenamingTargetExistsError(illegal_names)
         self.__table.rename(names, axis=1, inplace=True)
 
     def get_categories(self, attribute: str) -> typ.List[str]:
@@ -144,3 +155,15 @@ class BadOrderError(Exception):
     def __init__(self, ordered_categories: typ.List[str], categories: typ.List[str], attribute: str):
         self.message = f'Provided order {ordered_categories} does not match up with categories {categories} ' \
                        f'of attribute {attribute}'
+
+
+class RenamingTargetExistsError(Exception):
+    def __init__(self, names: typ.Set[str]):
+        self.message = f'Target names {", ".join(names)} already exist in table'
+        self.illegal_names = names
+
+
+class DuplicateTargetNamesError(Exception):
+    def __init__(self, names: typ.Set[str]):
+        self.message = f'Target names {", ".join(names)} are duplicates'
+        self.illegal_names = names
