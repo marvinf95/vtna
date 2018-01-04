@@ -19,11 +19,15 @@ class TemporalGraph(object):
             meta_table: MetadataTable with static node attributes.
             granularity: Granularity defines the size of time intervals, which will be considered as time steps.
                 Each time step has an associated aggregated graph containing all edges occurring in the time interval.
+        Raises:
+            MissingNodesInMetadataError: Is raised, when a node occurs in the provided edges but does not appear in the
+                provided metadata. Can never be raised, if metadata is None.
         """
         self.__graphs = list()  # type: typ.List[Graph]
         self.__nodes = dict()  # type: typ.Dict[int, TemporalNode]
 
         buckets = dimp.group_edges_by_granularity(edges, granularity)
+        n_timesteps = len(buckets)
         # Create graphs
         for time_step, edges in enumerate(buckets):
             edge_timestamps = col.defaultdict(list)
@@ -32,17 +36,24 @@ class TemporalGraph(object):
                 edge_timestamps[(node1, node2)].append(timestamp)
             edges = [Edge(edge[0], edge[1], timestamps) for edge, timestamps in edge_timestamps.items()]
             self.__graphs.append(Graph(edges))
-        # Create nodes
+        # Collect all node ids.
+        node_ids = set()  # type: typ.Set[int]
+        for g in self.__graphs:
+            for e in g.get_edges():
+                node_ids.update(e.get_incident_nodes())
         if meta_table is not None:
-            for node_id, attributes in meta_table.items():
-                self.__nodes[node_id] = TemporalNode(node_id, attributes, len(buckets))
+            node_ids.update(meta_table.keys())
+        # Create temporal nodes.
+        if meta_table is not None:
+            self.__nodes = dict((node_id, TemporalNode(node_id, dict(), n_timesteps))
+                                for node_id in node_ids)
         else:
-            nodes = set()
-            for g in self.__graphs:
-                for e in g.get_edges():
-                    nodes.update(e.get_incident_nodes())
-            self.__nodes = dict((node_id, TemporalNode(node_id, dict(), len(buckets)))
-                                for node_id in nodes)
+            for node_id in node_ids:
+                try:
+                    attributes = meta_table[node_id]
+                except KeyError:
+                    raise MissingNodesInMetadataError(node_id)
+                self.__nodes[node_id] = TemporalNode(node_id, attributes, n_timesteps)
 
     def __getitem__(self, time_step: int) -> 'Graph':
         """Returns the graph at the specified timestep"""
@@ -184,3 +195,9 @@ class Edge(object):
 
 class InvalidLocalAttributeValuesLength(Exception):
     pass
+
+
+class MissingNodesInMetadataError(Exception):
+    def __init__(self, node_id: int):
+        self.node_id = node_id
+        self.message = f'Metadata is missing row for node with id {node_id}'
