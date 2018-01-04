@@ -135,13 +135,12 @@ def static_weighted_spring_layout(temp_graph: vtna.graph.TemporalGraph,
 def random_walk_pca_layout(temp_graph: vtna.graph.TemporalGraph, n: int=25, repel: float=1.0, p: int=2,
                            random_state: int=None) -> typ.List[typ.Dict[int, Point]]:
     # TODO: Documentation
-    # TODO: Map points to -1, 1 interval.
-    # Mappings: node ID -> index, index -> node ID
-    idx2node = [node.get_id() for node in temp_graph.get_nodes()]
-    node2idx = dict((node_id, idx) for idx, node_id in enumerate(idx2node))
-    # Build adjacency matrix
+    # Load temporal graph as aggregated networkx graph ignoring nodes without edges.
     nxgraph = util.temporal_graph2networkx(temp_graph)
     n_nodes = len(nxgraph.nodes())
+    # Mappings: node ID -> index, index -> node ID
+    idx2node = list(nxgraph.nodes())
+    node2idx = dict((node_id, idx) for idx, node_id in enumerate(idx2node))
     adjacency_matrix = np.zeros(shape=(n_nodes, n_nodes), dtype=np.float)
     for n1, n2, data in nxgraph.edges(data=True):
         adjacency_matrix[node2idx[n1], node2idx[n2]] = data['count']
