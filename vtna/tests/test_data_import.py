@@ -16,9 +16,17 @@ class TestEdgeListUtilities(unittest.TestCase):
         self.assertEqual(earliest, 40)
         self.assertEqual(latest, 180)
 
+    def test_get_time_interval_of_edges_empty_parameter(self):
+        with self.assertRaises(ValueError):
+            dimp.get_time_interval_of_edges(list())
+
     def test_infer_update_delta(self):
         update_delta = dimp.infer_update_delta(TestEdgeListUtilities.edges)
         self.assertEqual(update_delta, 20)
+
+    def test_inter_update_delta_empty_parameter(self):
+        with self.assertRaises(ValueError):
+            dimp.infer_update_delta(list())
 
     def test_group_edges_by_granularity(self):
         buckets = dimp.group_edges_by_granularity(TestEdgeListUtilities.edges, 40)
@@ -73,7 +81,16 @@ class TestMetadataTableFunctionality(unittest.TestCase):
         meta.rename_attributes({'1': 'class', '2': 'gender'})
         self.assertEqual(set(meta.get_attribute_names()), {'class', 'gender'})
 
-    # TODO: Test exception cases of rename
+    def test_rename_attribute_names_duplicates(self):
+        meta = dimp.MetadataTable('vtna/tests/data/highschool_meta.tsv')
+        with self.assertRaises(dimp.DuplicateTargetNamesError):
+            meta.rename_attributes({'1': 'class', '2': 'class'})
+
+    def test_rename_attribute_names_illegal(self):
+        meta = dimp.MetadataTable('vtna/tests/data/highschool_meta.tsv')
+        meta.rename_attributes({'1': 'class'})
+        with self.assertRaises(dimp.RenamingTargetExistsError):
+            meta.rename_attributes({'2': 'class'})
 
     def test_get_categories(self):
         cat2 = TestMetadataTableFunctionality.meta.get_categories('2')
