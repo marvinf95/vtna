@@ -62,7 +62,7 @@ class TestGraphCreation(unittest.TestCase):
             self.assertEqual(len(graphs_high_granularity), 5, 'created all graphs')
             self.assertEqual(graphs_high_granularity[0].get_edge(122, 255).get_count(), 3, 'Check number of edge')
 
-        def create_graph_without_metadata(self):
+        def test_create_graph_without_metadata(self):
             temp_graph = graph.TemporalGraph(TestGraphCreation.edges, None, 20)
             self.assertTrue(len(temp_graph.get_nodes()) > 0)
             with self.assertRaises(KeyError):
