@@ -67,3 +67,8 @@ class TestGraphCreation(unittest.TestCase):
             self.assertTrue(len(temp_graph.get_nodes()) > 0)
             with self.assertRaises(KeyError):
                 temp_graph.get_node(454).get_global_attribute('1')
+
+        def test_create_graph_with_invalid_metadata(self):
+            invalid_meta = dimp.MetadataTable('vtna/tests/data/invalid_metadata.csv')
+            with self.assertRaises(graph.MissingNodesInMetadataError):
+                graph.TemporalGraph(self.edges, invalid_meta, 20)
