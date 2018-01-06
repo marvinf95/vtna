@@ -41,13 +41,13 @@ class TemporalGraph(object):
         for g in self.__graphs:
             for e in g.get_edges():
                 node_ids.update(e.get_incident_nodes())
-        if meta_table is not None:
-            node_ids.update(meta_table.keys())
         # Create temporal nodes.
-        if meta_table is not None:
+        if meta_table is None:
             self.__nodes = dict((node_id, TemporalNode(node_id, dict(), n_timesteps))
                                 for node_id in node_ids)
         else:
+            # Add nodes that only exist in metadata
+            node_ids.update(meta_table.keys())
             for node_id in node_ids:
                 try:
                     attributes = meta_table[node_id]
