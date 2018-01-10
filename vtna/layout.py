@@ -112,6 +112,30 @@ def flexible_weighted_spring_layout(temp_graph: vtna.graph.TemporalGraph,
     return layouts
 
 
+@is_static(False)
+@name('Flexible Weighted Spring Layout with initial Positions based on '
+      'previous layout')
+@description('Weighted Spring layout with one individual layout per time step. Nodes with high number of interactions '
+             'are closer. Positions of previous layout are reused as initial state.')
+def fws_initial_previous_layout(temp_graph: vtna.graph.TemporalGraph,
+                                    node_distance_scale: float=1.0,
+                                    n_iterations: int=50) -> typ.List[typ.Dict[int, Point]]:
+    layouts = list()
+    for graph in map(util.graph2networkx, temp_graph):
+        if len(graph.nodes()) == 0:
+            layout = dict()
+        else:
+            initial_layout = None
+            if len(layouts) > 0 and len(layouts[-1]) > 0:
+                initial_layout = layouts[-1]
+            node_distance = node_distance_scale * __default_node_distance(graph)
+            layout = nx.spring_layout(graph, dim=2, weight='count',
+                                      iterations=n_iterations,
+                                      k=node_distance, pos=initial_layout)
+        layouts.append(layout)
+    return layouts
+
+
 @is_static(True)
 @name('Static Weighted Spring Layout')
 @description('Weighted Spring layout which ensures static node position by aggregating all observations. Nodes with '
