@@ -25,6 +25,7 @@ class TemporalGraph(object):
         """
         self.__graphs = list()  # type: typ.List[Graph]
         self.__nodes = dict()  # type: typ.Dict[int, TemporalNode]
+        self.__granularity = granularity
 
         buckets = dimp.group_edges_by_granularity(edges, granularity)
         n_timesteps = len(buckets)
@@ -78,6 +79,9 @@ class TemporalGraph(object):
     def get_node(self, node_id: int) -> 'TemporalNode':
         """Returns one node defined by node_id."""
         return self.__nodes[node_id]
+
+    def get_granularity(self) -> int:
+        return self.__granularity
 
 
 class Graph(object):
