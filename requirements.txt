@@ -3,3 +3,5 @@ networkx>=2.0
 nose
 numpy
 pandas>=0.21.0
+sklearn
+scipy

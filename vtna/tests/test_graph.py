@@ -62,8 +62,13 @@ class TestGraphCreation(unittest.TestCase):
             self.assertEqual(len(graphs_high_granularity), 5, 'created all graphs')
             self.assertEqual(graphs_high_granularity[0].get_edge(122, 255).get_count(), 3, 'Check number of edge')
 
-        def create_graph_without_metadata(self):
+        def test_create_graph_without_metadata(self):
             temp_graph = graph.TemporalGraph(TestGraphCreation.edges, None, 20)
             self.assertTrue(len(temp_graph.get_nodes()) > 0)
             with self.assertRaises(KeyError):
                 temp_graph.get_node(454).get_global_attribute('1')
+
+        def test_create_graph_with_invalid_metadata(self):
+            invalid_meta = dimp.MetadataTable('vtna/tests/data/invalid_metadata.csv')
+            with self.assertRaises(graph.MissingNodesInMetadataError):
+                graph.TemporalGraph(self.edges, invalid_meta, 20)
