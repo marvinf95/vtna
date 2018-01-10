@@ -110,7 +110,7 @@ def flexible_weighted_spring_layout(temp_graph: vtna.graph.TemporalGraph,
       'previous layout')
 @description('Weighted Spring layout with one individual layout per time step. Nodes with high number of interactions '
              'are closer. Positions of previous layout are reused as initial state.')
-def fws_initial_previous(temp_graph: vtna.graph.TemporalGraph,
+def fws_initial_previous_layout(temp_graph: vtna.graph.TemporalGraph,
                                     node_distance_scale: float=1.0,
                                     n_iterations: int=50) -> typ.List[typ.Dict[int, Point]]:
     layouts = list()
@@ -119,8 +119,7 @@ def fws_initial_previous(temp_graph: vtna.graph.TemporalGraph,
             layout = dict()
         else:
             initial_layout = None
-            if len(layouts) > 0:
-                print(layouts)
+            if len(layouts) > 0 and len(layouts[-1]) > 0:
                 initial_layout = layouts[-1]
             node_distance = node_distance_scale * __default_node_distance(graph)
             layout = nx.spring_layout(graph, dim=2, weight='count',
