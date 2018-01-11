@@ -113,11 +113,10 @@ def flexible_weighted_spring_layout(temp_graph: vtna.graph.TemporalGraph,
 
 
 @is_static(False)
-@name('Flexible Weighted Spring Layout with initial Positions based on '
-      'previous layout')
+@name('Chained Weighted Spring Layout')
 @description('Weighted Spring layout with one individual layout per time step. Nodes with high number of interactions '
              'are closer. Positions of previous layout are reused as initial state.')
-def fws_initial_previous_layout(temp_graph: vtna.graph.TemporalGraph,
+def chained_weighted_spring_layout(temp_graph: vtna.graph.TemporalGraph,
                                     node_distance_scale: float=1.0,
                                     n_iterations: int=50) -> typ.List[typ.Dict[int, Point]]:
     layouts = list()
