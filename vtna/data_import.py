@@ -37,7 +37,17 @@ def read_edge_table(graph_data_path: str, col_sep: str = None) -> typ.List[Tempo
 
 
 def group_edges_by_granularity(edges: typ.List[TemporalEdge], granularity: int) -> typ.List[typ.List[TemporalEdge]]:
-    """Groups edges into buckets of width granularity"""
+    """
+    Groups edges into buckets of width granularity. Each entry of the returned
+    list refers to a list of edges of a timestep that has the length granularity.
+    The first timestep starts with the first timestamp that occurs in the provided
+    edge list.
+
+    Args:
+        edges: Temporal edges in the form (timestamp, node1, node2) that will
+            be aggregated.
+        granularity: Length of a timestep
+    """
     earliest, latest = get_time_interval_of_edges(edges)
     n_time_steps = int((latest - earliest) / granularity) + 1
 
@@ -67,6 +77,10 @@ def infer_update_delta(edges: typ.List[TemporalEdge]):
 
 
 class MetadataTable(object):
+    """
+    A container for metadata associated with nodes.
+    Manages order and names of metadata attributes.
+    """
     def __init__(self, metadata_path: str, col_sep: str = None):
         if col_sep is None:
             col_sep = r'\s+'

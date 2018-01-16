@@ -4,6 +4,11 @@ import vtna.graph as graph
 
 
 class NodeFilter(object):
+    """
+    Defines a wrapper for boolean predicates which can be combined for complex
+    filter queries.
+    Predicates apply to nodes and their properties, and can be provided.
+    """
     def __init__(self, predicate: typ.Callable[[graph.TemporalNode], bool]):
         self.predicate = predicate
 
@@ -42,7 +47,14 @@ class NodeFilter(object):
         return __gen()
 
 
+"""Some basic predefined predicate functions:"""
+
+
 def categorical_attribute_equal(attribute_name: str, attribute_value: str) -> typ.Callable[[graph.TemporalNode], bool]:
+    """
+    Checks for equality of global attribute named attribute_name of a node with
+    the provided attribute value. Attribute must be categorical and global.
+    """
     def __pred(n: graph.TemporalNode) -> bool:
         return n.get_global_attribute(attribute_name) == attribute_value
     return __pred
@@ -50,6 +62,15 @@ def categorical_attribute_equal(attribute_name: str, attribute_value: str) -> ty
 
 def ordinal_attribute_greater_than_equal(attribute_name: str, lower_bound: str, order: typ.List[str]) \
         -> typ.Callable[[graph.TemporalNode], bool]:
+    """
+    Checks for greater-equal relationship to lower_bound. Can be used with NodeFilters
+    __not__ to get less-than comparison check.
+
+    Args:
+        attribute_name: Name of global, ordinal attribute
+        lower_bound: Compared value
+        order: List that defines order of the ordinal attribute
+    """
     att2int = dict((val, idx) for idx, val in enumerate(order))
 
     def __pred(n: graph.TemporalNode) -> bool:
@@ -59,6 +80,15 @@ def ordinal_attribute_greater_than_equal(attribute_name: str, lower_bound: str, 
 
 
 def ordinal_attribute_greater_than(attribute_name: str, lower_bound: str, order: typ.List[str]):
+    """
+    Checks for greater relationship to lower_bound. Can be used with NodeFilters
+    __not__ to get less-or-equal-than comparison check.
+
+    Args:
+        attribute_name: Name of global, ordinal attribute
+        lower_bound: Compared value
+        order: List that defines order of the ordinal attribute
+    """
     att2int = dict((val, idx) for idx, val in enumerate(order))
 
     def __pred(n: graph.TemporalNode) -> bool:
