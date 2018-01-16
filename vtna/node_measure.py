@@ -17,6 +17,12 @@ MeasureValue = float
 
 
 class NodeMeasure(util.Describable, metaclass=abc.ABCMeta):
+    """
+    The base class for all node measures. Each node measure makes use of the
+    temporal graph, and the values can be applied to it or queried by
+    __getitem()__.
+    This base class provides only basic checks of invalid parameters.
+    """
     @abc.abstractmethod
     def __init__(self, graph: vtna.graph.TemporalGraph):
         if not isinstance(graph, vtna.graph.TemporalGraph):
@@ -30,23 +36,66 @@ class NodeMeasure(util.Describable, metaclass=abc.ABCMeta):
 
     @abc.abstractmethod
     def __getitem__(self, node_id: NodeID):
+        """Returns some kind of measure information for the provided node."""
         if not isinstance(node_id, (int, np.integer)):
             raise TypeError(
-                f'type {int} expected, received type {type(node_id)}')
+                f'type {NodeID} expected, received type {type(node_id)}')
+
+"""
+The following two classes are specifications on local and global measure values.
+Because of abstractions that are explained below, variable assignment and
+add_to_graph and __getitem__ functionality can already be implemented in 
+these base classes.
+"""
 
 
 class LocalNodeMeasure(NodeMeasure, metaclass=abc.ABCMeta):
+    """
+    A local measure always provides for every node a list of measure values,
+    with the index referencing the timestep the measurement applies to.
+    Therefore, the methods add_to_graph and __getitem__ can already be
+    implemented as default here.
+    """
     @abc.abstractmethod
+    def __init__(self, graph: vtna.graph.TemporalGraph):
+        super().__init__(graph)
+        self._temporal_graph: vtna.graph.TemporalGraph = graph
+        self._measures_dict: typ.Dict[NodeID, typ.List[MeasureValue]] = {}
+
+    def add_to_graph(self):
+        super().add_to_graph()
+        for (node_id, measures_list) in self._measures_dict.items():
+            self._temporal_graph.get_node(node_id).update_local_attribute(
+                self.get_name(), measures_list)
+
     def __getitem__(self, node_id: NodeID) -> typ.List[MeasureValue]:
         """Returns list of timestep measures for node node_id"""
-        return super().__getitem__(node_id)
+        super().__getitem__(node_id)
+        return self._measures_dict[node_id]
 
 
 class GlobalNodeMeasure(NodeMeasure, metaclass=abc.ABCMeta):
+    """
+    A global measure only provides a single measurement value for each node, but
+    add_to_graph and __getitem__ can be generally implemented already as well,
+    like the local measures.
+    """
     @abc.abstractmethod
+    def __init__(self, graph: vtna.graph.TemporalGraph):
+        super().__init__(graph)
+        self._temporal_graph: vtna.graph.TemporalGraph = graph
+        self._measures_dict: typ.Dict[NodeID, MeasureValue] = {}
+
+    def add_to_graph(self):
+        super().add_to_graph()
+        for (node_id, measure_value) in self._measures_dict.items():
+            self._temporal_graph.get_node(node_id).update_global_attribute(
+                self.get_name(), measure_value)
+
     def __getitem__(self, node_id: NodeID) -> MeasureValue:
         """Returns global measure for node node_id"""
-        return super().__getitem__(node_id)
+        super().__getitem__(node_id)
+        return self._measures_dict[node_id]
 
 
 def _graph2nxgraph_with_local_weights(local_graph: vtna.graph.Graph):
@@ -119,18 +168,17 @@ def _networkx_local_centrality(temporal_graph: vtna.graph.TemporalGraph, nx_cent
 class LocalDegreeCentrality(LocalNodeMeasure):
     def __init__(self, graph: vtna.graph.TemporalGraph):
         super().__init__(graph)
-        self.__temporal_graph = graph
-        self.__centrality_dict: typ.Dict[NodeID, typ.List[MeasureValue]] = dict()
 
-        for node in self.__temporal_graph.get_nodes():
-            node_dc = []
-            for localGraph in self.__temporal_graph:
+        for node in self._temporal_graph.get_nodes():
+            node_centrality_list = []
+            for localGraph in self._temporal_graph:
                 node_degree = 0
+                # Increment degree for every appearance of this node in an edge
                 for edge in localGraph.get_edges():
                     if node.get_id() in edge.get_incident_nodes():
                         node_degree += edge.get_count()
-                node_dc.append(node_degree)
-            self.__centrality_dict[node.get_id()] = node_dc
+                node_centrality_list.append(node_degree)
+            self._measures_dict[node.get_id()] = node_centrality_list
 
     def get_name(self) -> str:
         return "Local Degree Centrality"
@@ -138,27 +186,14 @@ class LocalDegreeCentrality(LocalNodeMeasure):
     def get_description(self) -> str:
         return "Calculates node degree for every node"
 
-    def add_to_graph(self):
-        super().add_to_graph()
-        for node in self.__temporal_graph.get_nodes():
-            node.update_local_attribute(self.get_name(),
-                                        self.__centrality_dict[
-                                            node.get_id()])
-
-    def __getitem__(self, node_id: NodeID) -> typ.List[MeasureValue]:
-        super().__getitem__(node_id)
-        return self.__centrality_dict[node_id]
-
 
 class GlobalDegreeCentrality(GlobalNodeMeasure):
     def __init__(self, graph: vtna.graph.TemporalGraph):
         super().__init__(graph)
-        self.__temporal_graph = graph
-        self.__centrality_dict: typ.Dict[NodeID, MeasureValue] = dict()
         # The global degree is just the sum of the local degrees
-        local_dc = LocalDegreeCentrality(graph)
+        local_degree = LocalDegreeCentrality(graph)
         for node in graph.get_nodes():
-            self.__centrality_dict[node.get_id()] = sum(local_dc[node.get_id()])
+            self._measures_dict[node.get_id()] = sum(local_degree[node.get_id()])
 
     def get_name(self) -> str:
         return "Global Degree Centrality"
@@ -167,26 +202,15 @@ class GlobalDegreeCentrality(GlobalNodeMeasure):
         return "Calculates degree for every node, which is the sum of all " \
                "local degrees"
 
-    def add_to_graph(self):
-        super().add_to_graph()
-        for node in self.__temporal_graph.get_nodes():
-            node.update_global_attribute(self.get_name(),
-                                         self.__centrality_dict[node.get_id()])
-
-    def __getitem__(self, node_id: int) -> MeasureValue:
-        super().__getitem__(node_id)
-        return self.__centrality_dict[node_id]
-
 
 class LocalBetweennessCentrality(LocalNodeMeasure):
     def __init__(self, graph: vtna.graph.TemporalGraph):
         super().__init__(graph)
-        self._temporal_graph = graph
 
         def nx_betweenness(nx_graph):
             return nx.betweenness_centrality(nx_graph, normalized=True, weight='weight')
 
-        self.__centrality_dict: typ.Dict[NodeID, typ.List[MeasureValue]] = _networkx_local_centrality(graph, nx_betweenness)
+        self._measures_dict = _networkx_local_centrality(graph, nx_betweenness)
 
     def get_name(self) -> str:
         return "Local Betweenness Centrality"
@@ -196,23 +220,12 @@ class LocalBetweennessCentrality(LocalNodeMeasure):
                "amount of shortest paths in the local graph through this " \
                "node."
 
-    def __getitem__(self, node_id: NodeID) -> typ.List[MeasureValue]:
-        super().__getitem__(node_id)
-        return self.__centrality_dict[node_id]
-
-    def add_to_graph(self):
-        super().add_to_graph()
-        for (node_id, time_cent_list) in self.__centrality_dict.items():
-            self._temporal_graph.get_node(node_id).update_local_attribute(
-                self.get_name(), time_cent_list)
-
 
 class GlobalBetweennessCentrality(GlobalNodeMeasure):
     def __init__(self, graph: vtna.graph.TemporalGraph):
         super().__init__(graph)
-        self.__temporal_graph = graph
-        nx_graph = _temporal_graph2nxgraph_with_global_weights(self.__temporal_graph)
-        self.__centrality_dict: typ.Dict[NodeID, MeasureValue] = nx.betweenness_centrality(nx_graph, normalized=True, weight='weight')
+        nx_graph = _temporal_graph2nxgraph_with_global_weights(self._temporal_graph)
+        self._measures_dict = nx.betweenness_centrality(nx_graph, normalized=True, weight='weight')
 
     def get_name(self) -> str:
         return "Global Betweenness Centrality"
@@ -222,26 +235,15 @@ class GlobalBetweennessCentrality(GlobalNodeMeasure):
                "amount of shortest paths in the global graph through this " \
                "node."
 
-    def __getitem__(self, node_id: NodeID) -> MeasureValue:
-        super().__getitem__(node_id)
-        return self.__centrality_dict[node_id]
-
-    def add_to_graph(self):
-        super().add_to_graph()
-        for (node_id, bc) in self.__centrality_dict.items():
-            self.__temporal_graph.get_node(node_id).update_global_attribute(
-                self.get_name(), bc)
-
 
 class LocalClosenessCentrality(LocalNodeMeasure):
     def __init__(self, graph: vtna.graph.TemporalGraph):
         super().__init__(graph)
-        self.__temporal_graph = graph
 
         def nx_closeness(nx_graph):
             return nx.closeness_centrality(nx_graph, distance='weight')
 
-        self.__centrality_dict: typ.Dict[NodeID, typ.List[MeasureValue]] = _networkx_local_centrality(graph, nx_closeness)
+        self._measures_dict = _networkx_local_centrality(graph, nx_closeness)
 
     def get_name(self) -> str:
         return "Local Closeness Centrality"
@@ -251,23 +253,12 @@ class LocalClosenessCentrality(LocalNodeMeasure):
                "the sum of the length of the shortest paths in the local " \
                "graph through this node."
 
-    def __getitem__(self, node_id: NodeID) -> typ.List[MeasureValue]:
-        super().__getitem__(node_id)
-        return self.__centrality_dict[node_id]
-
-    def add_to_graph(self):
-        super().add_to_graph()
-        for (node_id, time_cent_list) in self.__centrality_dict.items():
-            self.__temporal_graph.get_node(node_id).update_local_attribute(
-                self.get_name(), time_cent_list)
-
 
 class GlobalClosenessCentrality(GlobalNodeMeasure):
     def __init__(self, graph: vtna.graph.TemporalGraph):
         super().__init__(graph)
-        self.__temporal_graph = graph
-        nx_graph = _temporal_graph2nxgraph_with_global_weights(self.__temporal_graph)
-        self.__centrality_dict: typ.Dict[NodeID, MeasureValue] = nx.closeness_centrality(nx_graph, distance='weight')
+        nx_graph = _temporal_graph2nxgraph_with_global_weights(self._temporal_graph)
+        self._measures_dict = nx.closeness_centrality(nx_graph, distance='weight')
 
     def get_name(self) -> str:
         return "Global Closeness Centrality"
@@ -276,13 +267,3 @@ class GlobalClosenessCentrality(GlobalNodeMeasure):
         return "Calculates Closeness Centrality of each node, defined by " \
                "the sum of the length of the shortest paths in the global " \
                "graph through this node."
-
-    def __getitem__(self, node_id: NodeID) -> MeasureValue:
-        super().__getitem__(node_id)
-        return self.__centrality_dict[node_id]
-
-    def add_to_graph(self):
-        super().add_to_graph()
-        for (node_id, cc) in self.__centrality_dict.items():
-            self.__temporal_graph.get_node(node_id).update_global_attribute(
-                self.get_name(), cc)
