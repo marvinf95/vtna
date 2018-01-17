@@ -16,13 +16,15 @@ class Describable(metaclass=abc.ABCMeta):
     Contains abstract methods that are used as decorators, which tell e.g.
     the frontend / the user technical information.
     """
+    @staticmethod
     @abc.abstractmethod
-    def get_name(self) -> str:
+    def get_name() -> str:
         """A user friendly and descriptive name"""
         pass
 
+    @staticmethod
     @abc.abstractmethod
-    def get_description(self) -> str:
+    def get_description() -> str:
         """Short summary of idea and applications"""
         pass
 

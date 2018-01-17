@@ -180,10 +180,12 @@ class LocalDegreeCentrality(LocalNodeMeasure):
                 node_centrality_list.append(node_degree)
             self._measures_dict[node.get_id()] = node_centrality_list
 
-    def get_name(self) -> str:
+    @staticmethod
+    def get_name() -> str:
         return "Local Degree Centrality"
 
-    def get_description(self) -> str:
+    @staticmethod
+    def get_description() -> str:
         return "Calculates node degree for every node"
 
 
@@ -195,10 +197,12 @@ class GlobalDegreeCentrality(GlobalNodeMeasure):
         for node in graph.get_nodes():
             self._measures_dict[node.get_id()] = sum(local_degree[node.get_id()])
 
-    def get_name(self) -> str:
+    @staticmethod
+    def get_name() -> str:
         return "Global Degree Centrality"
 
-    def get_description(self) -> str:
+    @staticmethod
+    def get_description() -> str:
         return "Calculates degree for every node, which is the sum of all " \
                "local degrees"
 
@@ -212,10 +216,12 @@ class LocalBetweennessCentrality(LocalNodeMeasure):
 
         self._measures_dict = _networkx_local_centrality(graph, nx_betweenness)
 
-    def get_name(self) -> str:
+    @staticmethod
+    def get_name() -> str:
         return "Local Betweenness Centrality"
 
-    def get_description(self) -> str:
+    @staticmethod
+    def get_description() -> str:
         return "Calculates Betweenness Centrality of each node, defined by " \
                "amount of shortest paths in the local graph through this " \
                "node."
@@ -227,10 +233,12 @@ class GlobalBetweennessCentrality(GlobalNodeMeasure):
         nx_graph = _temporal_graph2nxgraph_with_global_weights(self._temporal_graph)
         self._measures_dict = nx.betweenness_centrality(nx_graph, normalized=True, weight='weight')
 
-    def get_name(self) -> str:
+    @staticmethod
+    def get_name() -> str:
         return "Global Betweenness Centrality"
 
-    def get_description(self) -> str:
+    @staticmethod
+    def get_description() -> str:
         return "Calculates Betweenness Centrality of each node, defined by " \
                "amount of shortest paths in the global graph through this " \
                "node."
@@ -245,10 +253,12 @@ class LocalClosenessCentrality(LocalNodeMeasure):
 
         self._measures_dict = _networkx_local_centrality(graph, nx_closeness)
 
-    def get_name(self) -> str:
+    @staticmethod
+    def get_name() -> str:
         return "Local Closeness Centrality"
 
-    def get_description(self) -> str:
+    @staticmethod
+    def get_description() -> str:
         return "Calculates Closeness Centrality of each node, defined by " \
                "the sum of the length of the shortest paths in the local " \
                "graph through this node."
@@ -260,10 +270,12 @@ class GlobalClosenessCentrality(GlobalNodeMeasure):
         nx_graph = _temporal_graph2nxgraph_with_global_weights(self._temporal_graph)
         self._measures_dict = nx.closeness_centrality(nx_graph, distance='weight')
 
-    def get_name(self) -> str:
+    @staticmethod
+    def get_name() -> str:
         return "Global Closeness Centrality"
 
-    def get_description(self) -> str:
+    @staticmethod
+    def get_description() -> str:
         return "Calculates Closeness Centrality of each node, defined by " \
                "the sum of the length of the shortest paths in the global " \
                "graph through this node."
