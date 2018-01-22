@@ -76,7 +76,7 @@ class TemporalGraph(object):
 
     def add_attribute(self, name: str, measurement_type: str, scope: str,
                       attributes: typ.Dict[int, typ.Union[AttributeValue, typ.List[AttributeValue]]] = None,
-                      categories: typ.List[str] = None):
+                      categories: typ.List[str] = None, range: typ.Tuple[float, float] = None):
         """
         Adds local attribute values with name to all nodes in this temporal graph.
 
@@ -89,8 +89,9 @@ class TemporalGraph(object):
                 name and measurement_type will be registered without changing the nodes.
             categories: List of all possible categorical values, if this attribute is nominal/categorical or ordinal.
                 If it's ordinal, the categories have to be in their supposed order.
+            range: Tuple with minimum and maximum values for interval attributes.
         """
-        self.__attributes_info[name] = dict(measurement_type=measurement_type, scope='local', categories=categories)
+        self.__attributes_info[name] = dict(measurement_type=measurement_type, scope='local', categories=categories, range=range)
         if attributes is not None:
             for node in self.get_nodes():
                 if scope == 'local':
