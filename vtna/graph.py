@@ -26,6 +26,8 @@ class TemporalGraph(object):
         self.__graphs = list()  # type: typ.List[Graph]
         self.__nodes = dict()  # type: typ.Dict[int, TemporalNode]
         self.__granularity = granularity
+        self.__attributes_info = dict()  # type: typ.Dict[str, typ.Dict[str, str]]
+        self.__metadata = meta_table
 
         buckets = dimp.group_edges_by_granularity(edges, granularity)
         n_timesteps = len(buckets)
@@ -71,6 +73,41 @@ class TemporalGraph(object):
     def __len__(self):
         """Returns the number of graphs that were created cause of the defined granularity."""
         return len(self.__graphs)
+
+    def add_attribute(self, name: str, measurement_type: str, scope: str,
+                      attributes: typ.Dict[int, typ.Union[AttributeValue, typ.List[AttributeValue]]] = None,
+                      categories: typ.List[str] = None):
+        """
+        Adds local attribute values with name to all nodes in this temporal graph.
+
+        Args:
+            name: Name of the attribute
+            measurement_type: Which kind of measurement type the values are, can be 'N' for nominal,
+                'I' for interval or 'O' for ordinal.
+            scope: If this attribute applies to a global or local node, can be either 'global' or 'local'.
+            attributes: Dict that maps each node to a list over timesteps of measurement values. If None,
+                name and measurement_type will be registered without changing the nodes.
+            categories: List of all possible categorical values, if this attribute is nominal/categorical or ordinal.
+        """
+        self.__attributes_info[name] = dict(measurement_type=measurement_type, scope='local', categories=categories)
+        if attributes is not None:
+            for node in self.get_nodes():
+                if scope == 'local':
+                    node.update_local_attribute(name, attributes[node.get_id()])
+                elif scope == 'global':
+                    node.update_global_attribute(name, attributes[node.get_id()])
+
+    def get_attributes_info(self) -> typ.Dict[str, typ.Dict[str, typ.Union[str, typ.List[str]]]]:
+        attributes = dict()
+        # Add metadata attributes with current name
+        for attribute_name in self.__metadata.get_attribute_names():
+            attributes[attribute_name] = dict(
+                measurement_type='O' if self.__metadata.is_ordered(attribute_name) else 'N',
+                scope='global',
+                categories=self.__metadata.get_categories(attribute_name))
+        # Add attributes registered here
+        attributes.update(self.__attributes_info)
+        return attributes
 
     def get_nodes(self) -> typ.List['TemporalNode']:
         """Returns all nodes with attributes."""
@@ -132,6 +169,8 @@ class TemporalNode(object):
         """
         Global attributes are attributes that don't change over time
         These are defined as key, value pairs.
+        They also contain metadata associated with this node, retrievable by
+        specifying the attribute name as name parameter.
         """
         if not isinstance(name, str):
             raise TypeError(f'type {str} for name expected, received type {type(name)}')
