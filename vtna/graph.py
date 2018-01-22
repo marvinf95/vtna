@@ -88,6 +88,7 @@ class TemporalGraph(object):
             attributes: Dict that maps each node to a list over timesteps of measurement values. If None,
                 name and measurement_type will be registered without changing the nodes.
             categories: List of all possible categorical values, if this attribute is nominal/categorical or ordinal.
+                If it's ordinal, the categories have to be in their supposed order.
         """
         self.__attributes_info[name] = dict(measurement_type=measurement_type, scope='local', categories=categories)
         if attributes is not None:
