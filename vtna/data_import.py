@@ -98,6 +98,7 @@ class MetadataTable(object):
             self.__table[col_name] = self.__table[col_name].astype('category')
 
     def get_attribute_names(self) -> typ.List[str]:
+        """Returns list of attribute names, i.e. all column names"""
         return [name for name in self.__table.columns.values if name != 'node']
 
     def rename_attributes(self, names: typ.Dict[str, str]):
