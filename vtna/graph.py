@@ -91,7 +91,7 @@ class TemporalGraph(object):
                 If it's ordinal, the categories have to be in their supposed order.
             range: Tuple with minimum and maximum values for interval attributes.
         """
-        self.__attributes_info[name] = dict(measurement_type=measurement_type, scope='local', categories=categories, range=range)
+        self.__attributes_info[name] = dict(measurement_type=measurement_type, scope=scope, categories=categories, range=range)
         if attributes is not None:
             for node in self.get_nodes():
                 if scope == 'local':
