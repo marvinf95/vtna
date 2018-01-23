@@ -226,7 +226,7 @@ class Edge(object):
         self.__node1, self.__node2 = sorted((node1, node2))
 
     def get_incident_nodes(self) -> typ.Tuple[int, int]:
-        """Get incident nodes of an edge in form of an tuple(node1, node2)"""
+        """Get ids of incident nodes of an edge in form of an tuple(node1, node2)"""
         return self.__node1, self.__node2
 
     def get_count(self) -> int:
