@@ -101,12 +101,13 @@ class TemporalGraph(object):
 
     def get_attributes_info(self) -> typ.Dict[str, typ.Dict[str, typ.Union[str, typ.List[str]]]]:
         attributes = dict()
-        # Add metadata attributes with current name
-        for attribute_name in self.__metadata.get_attribute_names():
-            attributes[attribute_name] = dict(
-                measurement_type='O' if self.__metadata.is_ordered(attribute_name) else 'N',
-                scope='global',
-                categories=self.__metadata.get_categories(attribute_name))
+        if self.__metadata is not None:
+            # Add metadata attributes with current/changeable name
+            for attribute_name in self.__metadata.get_attribute_names():
+                attributes[attribute_name] = dict(
+                    measurement_type='O' if self.__metadata.is_ordered(attribute_name) else 'N',
+                    scope='global',
+                    categories=self.__metadata.get_categories(attribute_name))
         # Add attributes registered here
         attributes.update(self.__attributes_info)
         return attributes
