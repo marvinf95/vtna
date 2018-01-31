@@ -133,6 +133,9 @@ class LocalDegreeCentrality(LocalNodeMeasure):
             return nx.degree_centrality(nx_graph)
 
         self._measures_dict = _networkx_local_centrality(graph, nx_degree)
+        # Denormalize degrees
+        for node_id in self._measures_dict:
+            self._measures_dict[node_id] = list(map(lambda d: int(d * (len(graph.get_nodes()) - 1)), self._measures_dict[node_id]))
 
     @staticmethod
     def get_name() -> str:
@@ -148,6 +151,9 @@ class GlobalDegreeCentrality(GlobalNodeMeasure):
         super().__init__(graph)
         nx_graph = util.temporal_graph2networkx(self._temporal_graph)
         self._measures_dict = nx.degree_centrality(nx_graph)
+        # Denormalize degrees
+        for node_id, degree in self._measures_dict.items():
+            self._measures_dict[node_id] = int(degree * (len(graph.get_nodes()) - 1))
 
     @staticmethod
     def get_name() -> str:
