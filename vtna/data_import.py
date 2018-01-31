@@ -11,7 +11,7 @@ import pandas.api.types
 TemporalEdge = typ.Tuple[int, int, int]
 
 
-def read_edge_table(graph_data_path: str, col_sep: str = None) -> typ.List[TemporalEdge]:
+def read_edge_table(graph_data_path: str, col_sep: str=None) -> typ.List[TemporalEdge]:
     """
     Loads edge table from given file path and returns as list of tuples (timestamp, node, node).
 
