@@ -68,6 +68,7 @@ class TemporalGraph(object):
         def __gen():
             for graph in self.__graphs:
                 yield graph
+
         return __gen()
 
     def __len__(self):
@@ -75,8 +76,8 @@ class TemporalGraph(object):
         return len(self.__graphs)
 
     def add_attribute(self, name: str, measurement_type: str, scope: str,
-                      attributes: typ.Dict[int, typ.Union[AttributeValue, typ.List[AttributeValue]]] = None,
-                      categories: typ.List[str] = None, range: typ.Tuple[float, float] = None):
+                      attributes: typ.Dict[int, typ.Union[AttributeValue, typ.List[AttributeValue]]]=None,
+                      categories: typ.List[str]=None, interval_range: typ.Tuple[float, float]=None):
         """
         Adds local attribute values with name to all nodes in this temporal graph.
 
@@ -89,9 +90,10 @@ class TemporalGraph(object):
                 name and measurement_type will be registered without changing the nodes.
             categories: List of all possible categorical values, if this attribute is nominal/categorical or ordinal.
                 If it's ordinal, the categories have to be in their supposed order.
-            range: Tuple with minimum and maximum values for interval attributes.
+            interval_range: Tuple with minimum and maximum values for interval attributes.
         """
-        self.__attributes_info[name] = dict(measurement_type=measurement_type, scope=scope, categories=categories, range=range)
+        self.__attributes_info[name] = dict(measurement_type=measurement_type, scope=scope, categories=categories,
+                                            range=interval_range)
         if attributes is not None:
             for node in self.get_nodes():
                 if scope == 'local':
@@ -132,6 +134,7 @@ class TemporalGraph(object):
                 else:
                     acc_graph = Graph(acc_graph.get_edges() + graph.get_edges())
                 yield acc_graph
+
         return accumulated_graph()
 
 
@@ -219,7 +222,8 @@ class TemporalNode(object):
         if not isinstance(name, str):
             raise TypeError(f'type {str} for name expected, received type {type(name)}')
         if len(values) != self.__n_timesteps:
-            raise InvalidLocalAttributeValuesLength(f'expected values of length {self.__n_timesteps}, '
+            n_timesteps = self.__n_timesteps
+            raise InvalidLocalAttributeValuesLength(f'expected values of length {n_timesteps}, '
                                                     f'received length {len(values)}')
         self.__local_attributes[name] = values.copy()
 
