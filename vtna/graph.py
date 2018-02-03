@@ -123,6 +123,17 @@ class TemporalGraph(object):
     def get_granularity(self) -> int:
         return self.__granularity
 
+    def accumulated(self) -> typ.Iterable['Graph']:
+        def accumulated_graph():
+            acc_graph = None
+            for graph in self:
+                if acc_graph is None:
+                    acc_graph = Graph(graph.get_edges())
+                else:
+                    acc_graph = Graph(acc_graph.get_edges() + graph.get_edges())
+                yield acc_graph
+        return accumulated_graph()
+
 
 class Graph(object):
     def __init__(self, edges: typ.List['Edge']):
