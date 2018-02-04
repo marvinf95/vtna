@@ -126,14 +126,18 @@ class TemporalGraph(object):
         return self.__granularity
 
     def accumulated(self) -> typ.Iterable['Graph']:
+        def merge(d: typ.Dict[typ.Tuple[int, int], typ.List[int]], l: typ.List[Edge]):
+            for edge in l:
+                if edge.get_incident_nodes() not in d:
+                    d[edge.get_incident_nodes()] = []
+                d[edge.get_incident_nodes()].extend(edge.get_timestamps())
+
         def accumulated_graph():
-            acc_graph = None
+            acc_edges = dict()  # type: typ.Dict[typ.Tuple[int, int], typ.List[int]]
             for graph in self:
-                if acc_graph is None:
-                    acc_graph = Graph(graph.get_edges())
-                else:
-                    acc_graph = Graph(acc_graph.get_edges() + graph.get_edges())
-                yield acc_graph
+                merge(acc_edges, graph.get_edges())
+                edges = [Edge(n1, n2, timestamps) for (n1, n2), timestamps in acc_edges.items()]
+                yield Graph(edges)
 
         return accumulated_graph()
 
