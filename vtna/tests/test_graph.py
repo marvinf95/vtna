@@ -75,40 +75,77 @@ class TestGraphCreation(unittest.TestCase):
 
 
 class TestAccumulatedGraph(unittest.TestCase):
-    temp_graph1 = None
-    temp_graph2 = None
+    edges1 = None
+    edges2 = None
 
     @classmethod
     def setUpClass(cls):
-        edges1 = [
+        cls.edges1 = [
             (0, 1, 2),
             (20, 2, 3),
             (40, 2, 3),
             (60, 2, 3),
             (60, 4, 6)
         ]
-        cls.temp_graph1 = graph.TemporalGraph(edges1, None, 20)
 
-        edges2 = [
+        cls.edges2 = [
             (0, 1, 2),
             (20, 2, 3),
             (60, 3, 4),
             (100, 4, 5)
         ]
-        cls.temp_graph2 = graph.TemporalGraph(edges2, None, 20)
+
+    def test_set_get_cumulative_mode(self):
+        temp_graph = graph.TemporalGraph(TestAccumulatedGraph.edges1, None, 20)
+        self.assertFalse(temp_graph.is_cumulative())
+        temp_graph.set_cumulative(True)
+        self.assertTrue(temp_graph.is_cumulative())
+        temp_graph.set_cumulative(False)
+        self.assertFalse(temp_graph.is_cumulative())
 
     def test_accumulated_with_cont_example(self):
-        graphs = list(TestAccumulatedGraph.temp_graph1.accumulated())
+        temp_graph = graph.TemporalGraph(TestAccumulatedGraph.edges1, None, 20)
+        temp_graph.set_cumulative(True)
+        graphs = list(temp_graph.__iter__())
         self.assertEqual(len(graphs[0].get_edges()), 1)
         self.assertEqual(len(graphs[1].get_edges()), 2)
         self.assertEqual(len(graphs[2].get_edges()), 2)
         self.assertEqual(len(graphs[3].get_edges()), 3)
 
     def test_accumulated_with_gap_example(self):
-        graphs = list(TestAccumulatedGraph.temp_graph2.accumulated())
+        temp_graph = graph.TemporalGraph(TestAccumulatedGraph.edges2, None, 20)
+        temp_graph.set_cumulative(True)
+        graphs = list(temp_graph.__iter__())
         self.assertEqual(len(graphs[0].get_edges()), 1)
         self.assertEqual(len(graphs[1].get_edges()), 2)
         self.assertEqual(len(graphs[2].get_edges()), 2)
         self.assertEqual(len(graphs[3].get_edges()), 3)
         self.assertEqual(len(graphs[4].get_edges()), 3)
         self.assertEqual(len(graphs[5].get_edges()), 4)
+
+    def test_switch_on_off_cumulative_graph_with_cont_example(self):
+        # Multiple on-offs to control for the fact that the cumulative graph is only computed on activation via set
+        temp_graph = graph.TemporalGraph(TestAccumulatedGraph.edges1, None, 20)
+        graphs = list(temp_graph.__iter__())
+        self.assertEqual(len(graphs[0].get_edges()), 1)
+        self.assertEqual(len(graphs[1].get_edges()), 1)
+        self.assertEqual(len(graphs[2].get_edges()), 1)
+        self.assertEqual(len(graphs[3].get_edges()), 2)
+        temp_graph.set_cumulative(True)
+        graphs = list(temp_graph.__iter__())
+        self.assertEqual(len(graphs[0].get_edges()), 1)
+        self.assertEqual(len(graphs[1].get_edges()), 2)
+        self.assertEqual(len(graphs[2].get_edges()), 2)
+        self.assertEqual(len(graphs[3].get_edges()), 3)
+        temp_graph.set_cumulative(False)
+        graphs = list(temp_graph.__iter__())
+        self.assertEqual(len(graphs[0].get_edges()), 1)
+        self.assertEqual(len(graphs[1].get_edges()), 1)
+        self.assertEqual(len(graphs[2].get_edges()), 1)
+        self.assertEqual(len(graphs[3].get_edges()), 2)
+        temp_graph.set_cumulative(True)
+        graphs = list(temp_graph.__iter__())
+        self.assertEqual(len(graphs[0].get_edges()), 1)
+        self.assertEqual(len(graphs[1].get_edges()), 2)
+        self.assertEqual(len(graphs[2].get_edges()), 2)
+        self.assertEqual(len(graphs[3].get_edges()), 3)

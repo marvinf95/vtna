@@ -24,10 +24,12 @@ class TemporalGraph(object):
                 provided metadata. Can never be raised, if metadata is None.
         """
         self.__graphs = list()  # type: typ.List[Graph]
+        self.__accumulated_graphs = None  # type: typ.List[Graph]
         self.__nodes = dict()  # type: typ.Dict[int, TemporalNode]
         self.__granularity = granularity
         self.__attributes_info = dict()  # type: typ.Dict[str, typ.Dict[str, str]]
         self.__metadata = meta_table
+        self.__cumulative = False
 
         buckets = dimp.group_edges_by_granularity(edges, granularity)
         n_timesteps = len(buckets)
@@ -39,6 +41,8 @@ class TemporalGraph(object):
                 edge_timestamps[(node1, node2)].append(timestamp)
             edges = [Edge(edge[0], edge[1], timestamps) for edge, timestamps in edge_timestamps.items()]
             self.__graphs.append(Graph(edges))
+        # Compute accumulated graph
+        self.__accumulated_graphs = list(self.__accumulate())
         # Collect all node ids.
         node_ids = set()  # type: typ.Set[int]
         for g in self.__graphs:
@@ -62,11 +66,12 @@ class TemporalGraph(object):
         """Returns the graph at the specified timestep"""
         if time_step < 0 or time_step >= len(self.__graphs):
             raise IndexError(f'Index {time_step} out of bounds')
-        return self.__graphs[time_step]
+        return self.__graphs[time_step] if not self.__cumulative else self.__accumulated_graphs[time_step]
 
     def __iter__(self) -> typ.Iterable['Graph']:
         def __gen():
-            for graph in self.__graphs:
+            graphs = self.__graphs if not self.__cumulative else self.__accumulated_graphs
+            for graph in graphs:
                 yield graph
 
         return __gen()
@@ -125,7 +130,14 @@ class TemporalGraph(object):
     def get_granularity(self) -> int:
         return self.__granularity
 
-    def accumulated(self) -> typ.Iterable['Graph']:
+    # getter/setter is not pythonic, but the rest of the code behaves the same way.
+    def set_cumulative(self, cumulative: bool):
+        self.__cumulative = cumulative
+
+    def is_cumulative(self) -> bool:
+        return self.__cumulative
+
+    def __accumulate(self) -> typ.Iterable['Graph']:
         def merge(d: typ.Dict[typ.Tuple[int, int], typ.List[int]], l: typ.List[Edge]):
             for edge in l:
                 if edge.get_incident_nodes() not in d:
