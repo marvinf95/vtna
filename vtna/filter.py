@@ -98,7 +98,6 @@ def ordinal_attribute_greater_than(attribute_name: str, lower_bound: str, order:
 
 
 def interval_attribute_greater_than_equal(attribute_name: str, lower_bound: float) -> typ.Callable:
-
     def __pred(n: graph.TemporalNode) -> bool:
         val = n.get_global_attribute(attribute_name)
         return lower_bound <= val
@@ -106,7 +105,6 @@ def interval_attribute_greater_than_equal(attribute_name: str, lower_bound: floa
 
 
 def interval_attribute_greater_than(attribute_name: str, lower_bound: float) -> typ.Callable:
-
     def __pred(n: graph.TemporalNode) -> bool:
         val = n.get_global_attribute(attribute_name)
         return lower_bound < val

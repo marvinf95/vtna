@@ -11,9 +11,9 @@ class TestFilterCreation(unittest.TestCase):
         @classmethod
         def setUpClass(cls):
             cls.nodes = [
-                vtna.graph.TemporalNode(1, {'Gender': 'Female', 'Degree': 'Master'}, 42),
-                vtna.graph.TemporalNode(3, {'Gender': 'Unknown', 'Degree': 'Bachelor'}, 42),
-                vtna.graph.TemporalNode(42, {'Gender': 'Male', 'Degree': 'Highschool'}, 42)
+                vtna.graph.TemporalNode(1, {'Gender': 'Female', 'Degree': 'Master', 'Age': 42.0}, 42),
+                vtna.graph.TemporalNode(3, {'Gender': 'Unknown', 'Degree': 'Bachelor', 'Age': 9001}, 42),
+                vtna.graph.TemporalNode(42, {'Gender': 'Male', 'Degree': 'Highschool', 'Age': -2}, 42)
             ]
             cls.degree_order = ['None', 'Highschool', 'Bachelor', 'Master', 'Doctorate']
 
@@ -34,6 +34,18 @@ class TestFilterCreation(unittest.TestCase):
                                                               TestFilterCreation.degree_order)
             self.assertTrue(pred(TestFilterCreation.nodes[0]))
             self.assertFalse(pred(TestFilterCreation.nodes[1]))
+            self.assertFalse(pred(TestFilterCreation.nodes[2]))
+
+        def test_interval_attribute_greater_than_equal(self):
+            pred = vtna.filter.interval_attribute_greater_than_equal('Age', 42.0)
+            self.assertTrue(pred(TestFilterCreation.nodes[0]))
+            self.assertTrue(pred(TestFilterCreation.nodes[1]))
+            self.assertFalse(pred(TestFilterCreation.nodes[2]))
+
+        def test_interval_attribute_greater_than(self):
+            pred = vtna.filter.interval_attribute_greater_than('Age', 42.0)
+            self.assertFalse(pred(TestFilterCreation.nodes[0]))
+            self.assertTrue(pred(TestFilterCreation.nodes[1]))
             self.assertFalse(pred(TestFilterCreation.nodes[2]))
 
         def test_node_filter_call(self):
