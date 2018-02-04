@@ -72,3 +72,43 @@ class TestGraphCreation(unittest.TestCase):
             invalid_meta = dimp.MetadataTable('vtna/tests/data/invalid_metadata.csv')
             with self.assertRaises(graph.MissingNodesInMetadataError):
                 graph.TemporalGraph(self.edges, invalid_meta, 20)
+
+
+class TestAccumulatedGraph(unittest.TestCase):
+    temp_graph1 = None
+    temp_graph2 = None
+
+    @classmethod
+    def setUpClass(cls):
+        edges1 = [
+            (0, 1, 2),
+            (20, 2, 3),
+            (40, 2, 3),
+            (60, 2, 3),
+            (60, 4, 6)
+        ]
+        cls.temp_graph1 = graph.TemporalGraph(edges1, None, 20)
+
+        edges2 = [
+            (0, 1, 2),
+            (20, 2, 3),
+            (60, 3, 4),
+            (100, 4, 5)
+        ]
+        cls.temp_graph2 = graph.TemporalGraph(edges2, None, 20)
+
+    def test_accumulated_with_cont_example(self):
+        graphs = list(TestAccumulatedGraph.temp_graph1.accumulated())
+        self.assertEqual(len(graphs[0].get_edges()), 1)
+        self.assertEqual(len(graphs[1].get_edges()), 2)
+        self.assertEqual(len(graphs[2].get_edges()), 2)
+        self.assertEqual(len(graphs[3].get_edges()), 3)
+
+    def test_accumulated_with_gap_example(self):
+        graphs = list(TestAccumulatedGraph.temp_graph2.accumulated())
+        self.assertEqual(len(graphs[0].get_edges()), 1)
+        self.assertEqual(len(graphs[1].get_edges()), 2)
+        self.assertEqual(len(graphs[2].get_edges()), 2)
+        self.assertEqual(len(graphs[3].get_edges()), 3)
+        self.assertEqual(len(graphs[4].get_edges()), 3)
+        self.assertEqual(len(graphs[5].get_edges()), 4)
