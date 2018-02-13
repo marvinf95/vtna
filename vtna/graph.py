@@ -80,9 +80,13 @@ class TemporalGraph(object):
         """Returns the number of graphs that were created cause of the defined granularity."""
         return len(self.__graphs)
 
-    def add_attribute(self, name: str, measurement_type: str, scope: str,
-                      attributes: typ.Dict[int, typ.Union[AttributeValue, typ.List[AttributeValue]]]=None,
-                      categories: typ.List[str]=None, interval_range: typ.Tuple[float, float]=None):
+    def add_measure_attribute(self,
+                              name: str,
+                              measurement_type: str,
+                              scope: str,
+                              attributes: typ.Dict[int, typ.Union[AttributeValue, typ.List[AttributeValue]]]=None,
+                              categories: typ.List[str]=None,
+                              interval_range: typ.Tuple[float, float]=None):
         """
         Adds local attribute values with name to all nodes in this temporal graph.
 
@@ -98,7 +102,7 @@ class TemporalGraph(object):
             interval_range: Tuple with minimum and maximum values for interval attributes.
         """
         self.__attributes_info[name] = dict(measurement_type=measurement_type, scope=scope, categories=categories,
-                                            range=interval_range)
+                                            range=interval_range, is_measure=True)
         if attributes is not None:
             for node in self.get_nodes():
                 if scope == 'local':
@@ -114,7 +118,8 @@ class TemporalGraph(object):
                 attributes[attribute_name] = dict(
                     measurement_type='O' if self.__metadata.is_ordered(attribute_name) else 'N',
                     scope='global',
-                    categories=self.__metadata.get_categories(attribute_name))
+                    categories=self.__metadata.get_categories(attribute_name),
+                    is_measure=False)
         # Add attributes registered here
         attributes.update(self.__attributes_info)
         return attributes

@@ -65,7 +65,7 @@ class LocalNodeMeasure(NodeMeasure, metaclass=abc.ABCMeta):
     def add_to_graph(self):
         super().add_to_graph()
         value_range = (min([min(l) for l in self._measures_dict.values()]), max([max(l) for l in self._measures_dict.values()]))
-        self._temporal_graph.add_attribute(self.get_name(), 'I', 'local', self._measures_dict, interval_range=value_range)
+        self._temporal_graph.add_measure_attribute(self.get_name(), 'I', 'local', self._measures_dict, interval_range=value_range)
 
     def __getitem__(self, node_id: NodeID) -> typ.List[MeasureValue]:
         """Returns list of timestep measures for node node_id"""
@@ -88,7 +88,7 @@ class GlobalNodeMeasure(NodeMeasure, metaclass=abc.ABCMeta):
     def add_to_graph(self):
         super().add_to_graph()
         value_range = (min(self._measures_dict.values()), max(self._measures_dict.values()))
-        self._temporal_graph.add_attribute(self.get_name(), 'I', 'global', self._measures_dict, interval_range=value_range)
+        self._temporal_graph.add_measure_attribute(self.get_name(), 'I', 'global', self._measures_dict, interval_range=value_range)
 
     def __getitem__(self, node_id: NodeID) -> MeasureValue:
         """Returns global measure for node node_id"""
