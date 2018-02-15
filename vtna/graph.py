@@ -102,7 +102,7 @@ class TemporalGraph(object):
             interval_range: Tuple with minimum and maximum values for interval attributes.
         """
         self.__attributes_info[name] = dict(measurement_type=measurement_type, scope=scope, categories=categories,
-                                            range=interval_range, is_measure=True)
+                                            range=interval_range)
         if attributes is not None:
             for node in self.get_nodes():
                 if scope == 'local':
@@ -118,8 +118,7 @@ class TemporalGraph(object):
                 attributes[attribute_name] = dict(
                     measurement_type='O' if self.__metadata.is_ordered(attribute_name) else 'N',
                     scope='global',
-                    categories=self.__metadata.get_categories(attribute_name),
-                    is_measure=False)
+                    categories=self.__metadata.get_categories(attribute_name))
         # Add attributes registered here
         attributes.update(self.__attributes_info)
         return attributes
