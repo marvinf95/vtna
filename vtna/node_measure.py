@@ -41,6 +41,7 @@ class NodeMeasure(util.Describable, metaclass=abc.ABCMeta):
             raise TypeError(
                 f'type {NodeID} expected, received type {type(node_id)}')
 
+
 """
 The following two classes are specifications on local and global measure values.
 Because of abstractions that are explained below, variable assignment and
@@ -58,18 +59,17 @@ class LocalNodeMeasure(NodeMeasure, metaclass=abc.ABCMeta):
     """
     @abc.abstractmethod
     def __init__(self, graph: vtna.graph.TemporalGraph):
-        super().__init__(graph)
         self._temporal_graph: vtna.graph.TemporalGraph = graph
         self._measures_dict: typ.Dict[NodeID, typ.List[MeasureValue]] = {}
 
     def add_to_graph(self):
         super().add_to_graph()
-        value_range = (min([min(l) for l in self._measures_dict.values()]), max([max(l) for l in self._measures_dict.values()]))
+        value_range = (min([min(l) for l in self._measures_dict.values()]),
+                       max([max(l) for l in self._measures_dict.values()]))
         self._temporal_graph.add_measure_attribute(self.get_name(), 'I', 'local', self._measures_dict, interval_range=value_range)
 
     def __getitem__(self, node_id: NodeID) -> typ.List[MeasureValue]:
         """Returns list of timestep measures for node node_id"""
-        super().__getitem__(node_id)
         return self._measures_dict[node_id]
 
 
@@ -83,20 +83,21 @@ class GlobalNodeMeasure(NodeMeasure, metaclass=abc.ABCMeta):
     def __init__(self, graph: vtna.graph.TemporalGraph):
         super().__init__(graph)
         self._temporal_graph: vtna.graph.TemporalGraph = graph
-        self._measures_dict: typ.Dict[NodeID, MeasureValue] = {}
+        self._measures_dict: typ.Dict[NodeID, MeasureValue] = dict((node.get_id(), 0.0)
+                                                                   for node in graph.get_nodes())
 
     def add_to_graph(self):
-        super().add_to_graph()
         value_range = (min(self._measures_dict.values()), max(self._measures_dict.values()))
-        self._temporal_graph.add_measure_attribute(self.get_name(), 'I', 'global', self._measures_dict, interval_range=value_range)
+        self._temporal_graph.add_measure_attribute(self.get_name(), 'I', 'global', attributes=self._measures_dict,
+                                                   interval_range=value_range)
 
     def __getitem__(self, node_id: NodeID) -> MeasureValue:
         """Returns global measure for node node_id"""
-        super().__getitem__(node_id)
         return self._measures_dict[node_id]
 
 
-def _networkx_local_centrality(temporal_graph: vtna.graph.TemporalGraph, nx_centrality_func: typ.Callable) -> typ.Dict[NodeID, typ.List[MeasureValue]]:
+def _networkx_local_centrality(temporal_graph: vtna.graph.TemporalGraph, nx_centrality_func: typ.Callable) \
+        -> typ.Dict[NodeID, typ.List[MeasureValue]]:
     """
     Computes local centralities for a temporal graph based on a networkx centrality function.
 
