@@ -135,7 +135,7 @@ class LocalDegreeCentrality(LocalNodeMeasure):
         def nx_degree(nx_graph):
             return nx.degree_centrality(nx_graph)
 
-        self._measures_dict = _networkx_local_centrality(graph, nx_degree)
+        self._measures_dict.update(_networkx_local_centrality(graph, nx_degree))
         # Denormalize degrees
         for node_id in self._measures_dict:
             self._measures_dict[node_id] = list(map(lambda d: int(d * (len(graph.get_nodes()) - 1)), self._measures_dict[node_id]))
@@ -153,7 +153,7 @@ class GlobalDegreeCentrality(GlobalNodeMeasure):
     def __init__(self, graph: vtna.graph.TemporalGraph):
         super().__init__(graph)
         nx_graph = util.temporal_graph2networkx(self._temporal_graph)
-        self._measures_dict = nx.degree_centrality(nx_graph)
+        self._measures_dict.update(nx.degree_centrality(nx_graph))
         # Denormalize degrees
         for node_id, degree in self._measures_dict.items():
             self._measures_dict[node_id] = int(degree * (len(graph.get_nodes()) - 1))
@@ -175,7 +175,7 @@ class LocalBetweennessCentrality(LocalNodeMeasure):
         def nx_betweenness(nx_graph):
             return nx.betweenness_centrality(nx_graph, normalized=True, weight=None)
 
-        self._measures_dict = _networkx_local_centrality(graph, nx_betweenness)
+        self._measures_dict.update(_networkx_local_centrality(graph, nx_betweenness))
 
     @staticmethod
     def get_name() -> str:
@@ -192,7 +192,7 @@ class GlobalBetweennessCentrality(GlobalNodeMeasure):
     def __init__(self, graph: vtna.graph.TemporalGraph):
         super().__init__(graph)
         nx_graph = util.temporal_graph2networkx(self._temporal_graph)
-        self._measures_dict = nx.betweenness_centrality(nx_graph, normalized=True, weight=None)
+        self._measures_dict.update(nx.betweenness_centrality(nx_graph, normalized=True, weight=None))
 
     @staticmethod
     def get_name() -> str:
@@ -212,7 +212,7 @@ class LocalClosenessCentrality(LocalNodeMeasure):
         def nx_closeness(nx_graph):
             return nx.closeness_centrality(nx_graph, distance=None)
 
-        self._measures_dict = _networkx_local_centrality(graph, nx_closeness)
+        self._measures_dict.update(_networkx_local_centrality(graph, nx_closeness))
 
     @staticmethod
     def get_name() -> str:
@@ -229,7 +229,7 @@ class GlobalClosenessCentrality(GlobalNodeMeasure):
     def __init__(self, graph: vtna.graph.TemporalGraph):
         super().__init__(graph)
         nx_graph = util.temporal_graph2networkx(self._temporal_graph)
-        self._measures_dict = nx.closeness_centrality(nx_graph, distance=None)
+        self._measures_dict.update(nx.closeness_centrality(nx_graph, distance=None))
 
     @staticmethod
     def get_name() -> str:
