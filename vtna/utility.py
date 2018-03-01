@@ -59,5 +59,6 @@ def temporal_graph2networkx(temp_graph: vtna.graph.TemporalGraph) -> networkx.Gr
         for edge in graph.get_edges():
             edges[tuple(sorted(edge.get_incident_nodes()))] += edge.get_count()
     nx_graph = networkx.Graph()
+    nx_graph.add_nodes_from(temp_graph.get_nodes())
     nx_graph.add_edges_from(edge + ({'count': count},) for edge, count in edges.items())
     return nx_graph
