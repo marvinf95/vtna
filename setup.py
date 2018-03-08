@@ -26,7 +26,7 @@ setuptools.setup(
         'pandas>=0.21.0',
         'networkx>=2.0',
         'scipy',
-        'sklearn'
+        'scikit-learn'
     ],
     test_suite='nose.collector',
     tests_require=['nose', 'coverage'],
