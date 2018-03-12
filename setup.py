@@ -8,7 +8,7 @@ def readme():
 
 setuptools.setup(
     name='vtna',
-    version='0.1.1',
+    version='0.1.2',
     description='Visualizing temporal networks with attributes',
     long_description=readme(),
     url='https://gitlab.uni-koblenz.de/marvinforster/vtna',
@@ -23,7 +23,7 @@ setuptools.setup(
     zip_safe=False,
     install_requires=[
         'numpy',
-        'pandas>=0.21.0',
+        'pandas==0.21.0',
         'networkx>=2.0',
         'scipy',
         'scikit-learn'

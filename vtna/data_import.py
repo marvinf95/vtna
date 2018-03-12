@@ -154,7 +154,16 @@ class MetadataTable(object):
         """
         if not isinstance(node, (int, np.integer)):
             raise TypeError(f'type {int} or {np.integer} expected, received type {type(node)}')
-        return self.__table.loc[node].to_dict()
+        val = self.__table.loc[node]
+        # We need this check for the following reason:
+        # In the case of a single categorical column in the dataframe, a loc query will not return a df, but instead
+        # it will return a string. In this case we cannot call to_dict, but have to construct the dictionary
+        # manually.
+        if type(val) == str:
+            item = {self.get_attribute_names()[0]: val}
+        else:
+            item = val.to_dict()
+        return item
 
     def keys(self) -> typ.List[int]:
         return self.__table.index.values.tolist()
