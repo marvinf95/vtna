@@ -112,19 +112,16 @@ def _networkx_local_centrality(temporal_graph: vtna.graph.TemporalGraph, nx_cent
     # Initialize empty lists for every node, because not every node
     # exists in every local graph
     for node in temporal_graph.get_nodes():
-        if node.get_id() not in centrality_dict:
-            centrality_dict[node.get_id()] = len(temporal_graph) * [0]
+        centrality_dict[node.get_id()] = len(temporal_graph) * [0]
     # We also have to use an index because appending won't work with
     # nodes missing in some local graphs
-    timestep = 0
-    for local_graph in temporal_graph:
+    for timestep, local_graph in enumerate(temporal_graph):
         # Skip empty graphs
         if not local_graph.get_edges():
             continue
         nx_graph = util.graph2networkx(local_graph)
         for (node_id, bc) in nx_centrality_func(nx_graph).items():
             centrality_dict[node_id][timestep] = bc
-        timestep += 1
     return centrality_dict
 
 
@@ -133,12 +130,9 @@ class LocalDegreeCentrality(LocalNodeMeasure):
         super().__init__(graph)
 
         def nx_degree(nx_graph):
-            return nx.degree_centrality(nx_graph)
+            return dict(nx.degree(nx_graph))
 
-        self._measures_dict.update(_networkx_local_centrality(graph, nx_degree))
-        # Denormalize degrees
-        for node_id in self._measures_dict:
-            self._measures_dict[node_id] = list(map(lambda d: int(d * (len(graph.get_nodes()) - 1)), self._measures_dict[node_id]))
+        self._measures_dict = _networkx_local_centrality(graph, nx_degree)
 
     @staticmethod
     def get_name() -> str:
